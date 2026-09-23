@@ -1,8 +1,19 @@
+"""!
+@file correlation.py
+@brief Correlation of Variorum power measurements with profiled execution regions.
+"""
+
 import os
 import pandas as pd
 from modules.utils import load_and_concat_csvs, validate_columns
 
+
 def prepare_power_data(power_files):
+    """!
+    @brief Prepare power DataFrame from list of power CSV files.
+    @param power_files List of paths to power CSV files.
+    @return Cleaned DataFrame with timestamp_ns and power_watts.
+    """
     df = load_and_concat_csvs(power_files)
     if df.empty:
         return pd.DataFrame()
@@ -24,7 +35,13 @@ def prepare_power_data(power_files):
             return pd.DataFrame()
     return df
 
+
 def prepare_regions_data(region_file):
+    """!
+    @brief Prepare execution regions DataFrame.
+    @param region_file Path to CSV file containing region intervals.
+    @return DataFrame containing start_time_ns, end_time_ns, and unique region names.
+    """
     try:
         regions_df = pd.read_csv(region_file)
     except Exception as e:
@@ -46,7 +63,14 @@ def prepare_regions_data(region_file):
     regions_df['unique_name'] = unique_region_names
     return regions_df
 
+
 def create_correlation_data(power_files, region_file):
+    """!
+    @brief Match power samples with active execution regions.
+    @param power_files List of power CSV files.
+    @param region_file Path to regions CSV file.
+    @return DataFrame associating timestamps with region names and power values.
+    """
     power_df = prepare_power_data(power_files)
     regions_df = prepare_regions_data(region_file)
     if power_df.empty or regions_df.empty:
@@ -64,7 +88,13 @@ def create_correlation_data(power_files, region_file):
         })
     return pd.DataFrame(correlation_data)
 
+
 def create_time_series_data(correlation_df):
+    """!
+    @brief Pivot correlation data into a multi-column time series table.
+    @param correlation_df DataFrame produced by create_correlation_data.
+    @return Pivoted DataFrame with time_ns and columns per region.
+    """
     if correlation_df.empty:
         return pd.DataFrame()
     pivoted = correlation_df.pivot_table(
@@ -74,7 +104,13 @@ def create_time_series_data(correlation_df):
     pivoted.columns.name = None
     return pivoted.sort_values('time_ns').reset_index(drop=True)
 
+
 def generate_sql_schema(series_df, output_dir):
+    """!
+    @brief Generate PostgreSQL schema and copy commands for the time series table.
+    @param series_df Pivoted DataFrame of series data.
+    @param output_dir Destination directory for variorum_series.sql.
+    """
     if series_df.empty:
         return
     col_defs = []
@@ -95,13 +131,17 @@ def generate_sql_schema(series_df, output_dir):
         "    col_list text;\n"
         "    dyn_sql text;\n"
         "BEGIN\n"
-        "    SELECT string_agg(format('%I != 0', column_name), ' OR ')\n"
+        "    SELECT string_agg(format('%I IS NOT NULL AND %I != 0', column_name, column_name), ' OR ')\n"
         "    INTO col_list\n"
         "    FROM information_schema.columns\n"
         "    WHERE table_name = 'variorum_series'\n"
         "      AND column_name != 'time_ns';\n"
-        "    dyn_sql := format('SELECT * FROM variorum_series WHERE %s', col_list);\n"
-        "    RETURN QUERY EXECUTE dyn_sql;\n"
+        "    IF col_list IS NULL THEN\n"
+        "        RETURN QUERY SELECT * FROM variorum_series;\n"
+        "    ELSE\n"
+        "        dyn_sql := format('SELECT * FROM variorum_series WHERE %s', col_list);\n"
+        "        RETURN QUERY EXECUTE dyn_sql;\n"
+        "    END IF;\n"
         "END;\n"
         "$$ LANGUAGE plpgsql;\n"
     )
