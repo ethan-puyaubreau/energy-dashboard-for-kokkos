@@ -5,12 +5,16 @@ Grafana + PostgreSQL dashboard for Variorum energy profiling data, provisioned a
 
 ## Quick Start
 
-**Prerequisites:** Docker, Docker Compose, Python, Variorum library.
+**Prerequisites:** Docker, Docker Compose, Python 3, Variorum library.
 
-1. Clone the repo.
-2. Place CSV output files in `input/variorum/` (see naming below), or run `input/generic_script.sh` to generate them.
-3. Run `./setup.sh` — creates a venv, aggregates the data, starts the stack, then removes the venv.
-4. Open `http://localhost:3000` (admin / admin).
+1. Clone the repository.
+2. (Optional) Configure environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+3. Place CSV output files in `input/variorum/` (see naming below), or run `input/generic_script.sh` to generate them.
+4. Run `./setup.sh` — creates or reuses `.venv`, aggregates the data, starts the stack, and waits for database readiness.
+5. Open `http://localhost:3000` (default: admin / admin, configurable in `.env`).
 
 ## Input File Naming
 
