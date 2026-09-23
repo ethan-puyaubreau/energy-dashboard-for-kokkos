@@ -1,13 +1,13 @@
+use crate::model::Event;
+use anyhow::{Context, Result};
 use std::fs::File;
 use std::path::Path;
-use anyhow::{Context, Result};
-use crate::model::Event;
 
 /// Parse events.csv into a vector of Event structs.
 pub fn parse_events_csv<P: AsRef<Path>>(path: P) -> Result<Vec<Event>> {
     let file = File::open(path.as_ref())
         .with_context(|| format!("Failed to open events file: {}", path.as_ref().display()))?;
-    
+
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(true)
         .trim(csv::Trim::All)
@@ -15,8 +15,12 @@ pub fn parse_events_csv<P: AsRef<Path>>(path: P) -> Result<Vec<Event>> {
 
     let mut events = Vec::new();
     for result in rdr.deserialize() {
-        let event: Event = result
-            .with_context(|| format!("Malformed record in events file: {}", path.as_ref().display()))?;
+        let event: Event = result.with_context(|| {
+            format!(
+                "Malformed record in events file: {}",
+                path.as_ref().display()
+            )
+        })?;
         events.push(event);
     }
 
@@ -35,6 +39,9 @@ mod tests {
         assert_eq!(events.len(), 2);
         assert_eq!(events[0].name, "Main");
         assert_eq!(events[0].duration_ns(), 400);
-        assert_eq!(events[1].category, crate::model::RegionCategory::ParallelFor);
+        assert_eq!(
+            events[1].category,
+            crate::model::RegionCategory::ParallelFor
+        );
     }
 }

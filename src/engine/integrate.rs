@@ -18,7 +18,7 @@ pub fn integrate_energy_joules(samples: &[PowerSample], start_ns: u64, end_ns: u
 
     if window.is_empty() {
         // Approximate using nearest surrounding samples if available
-        let before = samples.iter().filter(|s| s.timestamp_ns < start_ns).last();
+        let before = samples.iter().rfind(|s| s.timestamp_ns < start_ns);
         let after = samples.iter().find(|s| s.timestamp_ns > end_ns);
 
         let power = match (before, after) {

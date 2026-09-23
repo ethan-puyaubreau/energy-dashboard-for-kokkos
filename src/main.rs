@@ -3,9 +3,9 @@ pub mod model;
 pub mod parser;
 pub mod report;
 
-use std::path::PathBuf;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(name = "kokkos-energy")]
@@ -34,7 +34,10 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Analyze { trace_dir, perfetto } => {
+        Commands::Analyze {
+            trace_dir,
+            perfetto,
+        } => {
             let trace = parser::load_trace_dir(&trace_dir)?;
             let analysis = engine::analyze_trace(&trace);
 

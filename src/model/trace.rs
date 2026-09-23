@@ -21,7 +21,11 @@ pub struct Trace {
 }
 
 impl Trace {
-    pub fn new(metadata: Option<Metadata>, mut events: Vec<Event>, mut samples: Vec<PowerSample>) -> Self {
+    pub fn new(
+        metadata: Option<Metadata>,
+        mut events: Vec<Event>,
+        mut samples: Vec<PowerSample>,
+    ) -> Self {
         events.sort_by_key(|e| e.start_ns);
         samples.sort_by_key(|s| s.timestamp_ns);
         Self {

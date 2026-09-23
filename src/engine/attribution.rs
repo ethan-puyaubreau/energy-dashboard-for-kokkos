@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-use crate::model::{RegionCategory, Trace};
 use super::integrate::integrate_energy_joules;
+use crate::model::{RegionCategory, Trace};
+use std::collections::HashMap;
 
 /// Aggregated metrics for a family of events with the same name and category.
 #[derive(Debug, Clone)]
@@ -57,12 +57,14 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
     for event in &trace.events {
         let dur = event.duration_sec();
         let energy = integrate_energy_joules(&trace.samples, event.start_ns, event.end_ns);
-        
-        let entry = map.entry((event.name.clone(), event.category)).or_insert(Agg {
-            count: 0,
-            duration_sec: 0.0,
-            energy_joules: 0.0,
-        });
+
+        let entry = map
+            .entry((event.name.clone(), event.category))
+            .or_insert(Agg {
+                count: 0,
+                duration_sec: 0.0,
+                energy_joules: 0.0,
+            });
 
         entry.count += 1;
         entry.duration_sec += dur;
@@ -95,7 +97,11 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
     }
 
     // Sort by energy descending
-    regions.sort_by(|a, b| b.total_energy_joules.partial_cmp(&a.total_energy_joules).unwrap());
+    regions.sort_by(|a, b| {
+        b.total_energy_joules
+            .partial_cmp(&a.total_energy_joules)
+            .unwrap()
+    });
 
     TraceAnalysis {
         total_trace_duration_sec,

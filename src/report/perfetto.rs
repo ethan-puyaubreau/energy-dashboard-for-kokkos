@@ -1,8 +1,8 @@
+use anyhow::{Context, Result};
+use serde_json::json;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
-use anyhow::{Context, Result};
-use serde_json::json;
 
 use crate::model::Trace;
 
@@ -11,8 +11,12 @@ use crate::model::Trace;
 /// Can be loaded directly into https://ui.perfetto.dev or chrome://tracing.
 pub fn export_perfetto_trace<P: AsRef<Path>>(trace: &Trace, out_path: P) -> Result<()> {
     let out_path = out_path.as_ref();
-    let mut file = File::create(out_path)
-        .with_context(|| format!("Failed to create Perfetto trace file: {}", out_path.display()))?;
+    let mut file = File::create(out_path).with_context(|| {
+        format!(
+            "Failed to create Perfetto trace file: {}",
+            out_path.display()
+        )
+    })?;
 
     // Determine baseline timestamp (microseconds)
     let min_ts_ns = trace

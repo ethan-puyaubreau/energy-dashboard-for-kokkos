@@ -1,13 +1,17 @@
+use crate::model::PowerSample;
+use anyhow::{Context, Result};
 use std::fs::File;
 use std::path::Path;
-use anyhow::{Context, Result};
-use crate::model::PowerSample;
 
 /// Parse power_samples.csv into a vector of PowerSample structs.
 pub fn parse_power_csv<P: AsRef<Path>>(path: P) -> Result<Vec<PowerSample>> {
-    let file = File::open(path.as_ref())
-        .with_context(|| format!("Failed to open power samples file: {}", path.as_ref().display()))?;
-    
+    let file = File::open(path.as_ref()).with_context(|| {
+        format!(
+            "Failed to open power samples file: {}",
+            path.as_ref().display()
+        )
+    })?;
+
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(true)
         .trim(csv::Trim::All)
@@ -15,8 +19,12 @@ pub fn parse_power_csv<P: AsRef<Path>>(path: P) -> Result<Vec<PowerSample>> {
 
     let mut samples = Vec::new();
     for result in rdr.deserialize() {
-        let sample: PowerSample = result
-            .with_context(|| format!("Malformed record in power samples file: {}", path.as_ref().display()))?;
+        let sample: PowerSample = result.with_context(|| {
+            format!(
+                "Malformed record in power samples file: {}",
+                path.as_ref().display()
+            )
+        })?;
         samples.push(sample);
     }
 

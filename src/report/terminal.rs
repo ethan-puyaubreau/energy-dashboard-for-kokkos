@@ -11,23 +11,24 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
         let app = meta.app_name.as_deref().unwrap_or("Unknown");
         let host = meta.hostname.as_deref().unwrap_or("Unknown");
         let backend = meta.kokkos_backend.as_deref().unwrap_or("Unknown");
-        println!("  Kokkos Energy Analysis - App: {} (Host: {}, Backend: {})", app, host, backend);
+        println!(
+            "  Kokkos Energy Analysis - App: {} (Host: {}, Backend: {})",
+            app, host, backend
+        );
     } else {
         println!("  Kokkos Energy Analysis Report");
     }
 
     let mut table = Table::new();
-    table
-        .load_preset(UTF8_FULL)
-        .set_header(vec![
-            Cell::new("Block / Kernel").fg(Color::Cyan),
-            Cell::new("Category").fg(Color::Cyan),
-            Cell::new("Calls").fg(Color::Cyan),
-            Cell::new("Duration (s)").fg(Color::Cyan),
-            Cell::new("Energy (J)").fg(Color::Cyan),
-            Cell::new("Avg Power (W)").fg(Color::Cyan),
-            Cell::new("% Energy").fg(Color::Cyan),
-        ]);
+    table.load_preset(UTF8_FULL).set_header(vec![
+        Cell::new("Block / Kernel").fg(Color::Cyan),
+        Cell::new("Category").fg(Color::Cyan),
+        Cell::new("Calls").fg(Color::Cyan),
+        Cell::new("Duration (s)").fg(Color::Cyan),
+        Cell::new("Energy (J)").fg(Color::Cyan),
+        Cell::new("Avg Power (W)").fg(Color::Cyan),
+        Cell::new("% Energy").fg(Color::Cyan),
+    ]);
 
     for r in &analysis.regions {
         table.add_row(Row::from(vec![

@@ -1,10 +1,10 @@
 pub mod events_csv;
 pub mod power_csv;
 
+use crate::model::{Metadata, Trace};
+use anyhow::{Context, Result};
 use std::fs::File;
 use std::path::Path;
-use anyhow::{Context, Result};
-use crate::model::{Metadata, Trace};
 
 pub use events_csv::parse_events_csv;
 pub use power_csv::parse_power_csv;
