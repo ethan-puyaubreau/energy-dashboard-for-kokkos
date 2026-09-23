@@ -18,7 +18,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Analyze an execution trace directory
+    /// Analyze an existing execution trace directory
     Analyze {
         /// Path to the directory containing events.csv and power_samples.csv
         #[arg(value_name = "TRACE_DIR")]
@@ -27,6 +27,29 @@ enum Commands {
         /// Optional path to export a Perfetto/Chrome-Tracing JSON trace
         #[arg(short, long, value_name = "PERFETTO_FILE")]
         perfetto: Option<PathBuf>,
+
+        /// Optional path to export a standalone interactive HTML dashboard
+        #[arg(short, long, value_name = "HTML_FILE")]
+        report: Option<PathBuf>,
+    },
+
+    /// Run an application with Kokkos energy profiling and analyze output immediately
+    Run {
+        /// Path to the energy profiler library (e.g. libkokkos_energy.so)
+        #[arg(short, long, value_name = "LIB_PATH", env = "KOKKOS_TOOLS_LIBS")]
+        lib: PathBuf,
+
+        /// Optional path to export a Perfetto/Chrome-Tracing JSON trace
+        #[arg(short, long, value_name = "PERFETTO_FILE")]
+        perfetto: Option<PathBuf>,
+
+        /// Optional path to export a standalone interactive HTML dashboard
+        #[arg(short, long, value_name = "HTML_FILE")]
+        report: Option<PathBuf>,
+
+        /// Application executable and arguments
+        #[arg(last = true, required = true, value_name = "COMMAND")]
+        app_command: Vec<String>,
     },
 }
 
@@ -37,6 +60,7 @@ fn main() -> Result<()> {
         Commands::Analyze {
             trace_dir,
             perfetto,
+            report,
         } => {
             let trace = parser::load_trace_dir(&trace_dir)?;
             let analysis = engine::analyze_trace(&trace);
@@ -50,6 +74,29 @@ fn main() -> Result<()> {
                 println!("  Exported Perfetto trace to: {}", perfetto_path.display());
                 println!("  Open https://ui.perfetto.dev to visualize the timeline.\n");
             }
+
+            // Export to interactive HTML report if requested
+            if let Some(html_path) = report {
+                report::export_html_report(&trace, &analysis, &html_path)?;
+                println!(
+                    "  Exported interactive HTML report to: {}\n",
+                    html_path.display()
+                );
+            }
+        }
+
+        Commands::Run {
+            lib,
+            perfetto,
+            report,
+            app_command,
+        } => {
+            engine::run_instrumented_command(
+                &lib,
+                &app_command,
+                perfetto.as_deref(),
+                report.as_deref(),
+            )?;
         }
     }
 
