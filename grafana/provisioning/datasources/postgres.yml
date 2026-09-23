@@ -6,10 +6,10 @@ datasources:
     uid: bepxmpopbv668b
     access: proxy
     url: postgres_db:5432
-    database: energy_analysis
-    user: grafana_user
+    database: ${POSTGRES_DB:energy_analysis}
+    user: ${POSTGRES_USER:grafana_user}
     secureJsonData:
-      password: super_secret_password
+      password: ${POSTGRES_PASSWORD:super_secret_password}
     jsonData:
       sslmode: disable
       postgresVersion: 1500
