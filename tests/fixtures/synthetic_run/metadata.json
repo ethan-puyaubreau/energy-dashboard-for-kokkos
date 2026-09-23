@@ -1,0 +1,7 @@
+{
+  "spec_version": "1.0",
+  "app_name": "synthetic_bench",
+  "hostname": "test-node",
+  "kokkos_backend": "CUDA",
+  "start_epoch_ns": 1000000000
+}
