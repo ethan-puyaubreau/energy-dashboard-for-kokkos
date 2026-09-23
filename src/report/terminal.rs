@@ -1,0 +1,57 @@
+use comfy_table::presets::UTF8_FULL;
+use comfy_table::{Cell, Color, Row, Table};
+
+use crate::engine::TraceAnalysis;
+use crate::model::Trace;
+
+/// Print summary table and metadata to standard output.
+pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
+    println!();
+    if let Some(ref meta) = trace.metadata {
+        let app = meta.app_name.as_deref().unwrap_or("Unknown");
+        let host = meta.hostname.as_deref().unwrap_or("Unknown");
+        let backend = meta.kokkos_backend.as_deref().unwrap_or("Unknown");
+        println!("  Kokkos Energy Analysis - App: {} (Host: {}, Backend: {})", app, host, backend);
+    } else {
+        println!("  Kokkos Energy Analysis Report");
+    }
+
+    let mut table = Table::new();
+    table
+        .load_preset(UTF8_FULL)
+        .set_header(vec![
+            Cell::new("Block / Kernel").fg(Color::Cyan),
+            Cell::new("Category").fg(Color::Cyan),
+            Cell::new("Calls").fg(Color::Cyan),
+            Cell::new("Duration (s)").fg(Color::Cyan),
+            Cell::new("Energy (J)").fg(Color::Cyan),
+            Cell::new("Avg Power (W)").fg(Color::Cyan),
+            Cell::new("% Energy").fg(Color::Cyan),
+        ]);
+
+    for r in &analysis.regions {
+        table.add_row(Row::from(vec![
+            Cell::new(&r.name),
+            Cell::new(r.category.to_string()),
+            Cell::new(r.call_count.to_string()),
+            Cell::new(format!("{:.3}", r.total_duration_sec)),
+            Cell::new(format!("{:.2}", r.total_energy_joules)),
+            Cell::new(format!("{:.1}", r.avg_power_watts)),
+            Cell::new(format!("{:.1}%", r.energy_percentage)),
+        ]));
+    }
+
+    // Total trace summary row
+    table.add_row(Row::from(vec![
+        Cell::new("Total Trace (Active)").fg(Color::Yellow),
+        Cell::new("-"),
+        Cell::new("-"),
+        Cell::new(format!("{:.3}", analysis.total_trace_duration_sec)).fg(Color::Yellow),
+        Cell::new(format!("{:.2}", analysis.total_trace_energy_joules)).fg(Color::Yellow),
+        Cell::new(format!("{:.1}", analysis.avg_trace_power_watts)).fg(Color::Yellow),
+        Cell::new("100.0%").fg(Color::Yellow),
+    ]));
+
+    println!("{table}");
+    println!();
+}
