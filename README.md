@@ -58,7 +58,18 @@ accelerators are not sampled by the connector.
 
 ## Quick Start
 
-### 1. Build from source
+### 1. Install
+
+Download the static Linux x86_64 binary from the
+[releases page](https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos/releases),
+check its checksum and extract it:
+
+```bash
+sha256sum -c kokkos-energy-v0.2.0-x86_64-unknown-linux-musl.tar.gz.sha256
+tar xzf kokkos-energy-v0.2.0-x86_64-unknown-linux-musl.tar.gz
+```
+
+Or build from source:
 
 ```bash
 cargo build --release
