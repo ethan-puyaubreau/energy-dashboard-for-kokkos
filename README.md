@@ -48,10 +48,10 @@ accelerators are not sampled by the connector.
 
 ### Tested configuration
 
-| Component | Version |
+| GPU | What was tested |
 | :--- | :--- |
-| GPU | NVIDIA GeForce RTX 3080 Ti (Ampere), Ubuntu on WSL2, Kokkos 5.2.2 CUDA backend: connector and analysis |
-| GPU | NVIDIA H100 NVL (Hopper): analysis of the 128 ArborX DBSCAN runs traced in 2025 and [published with the SMC 2025 poster](https://github.com/ethan-puyaubreau/smc2025-gpu-energy-poster#data-and-reproduction), converted to this format |
+| NVIDIA GeForce RTX 3080 Ti (Ampere) | Connector and analysis, Ubuntu on WSL2, Kokkos 5.2.2 CUDA backend |
+| NVIDIA H100 NVL (Hopper) | Analysis of the 128 ArborX DBSCAN runs traced in 2025 and [published with the SMC 2025 poster](https://github.com/ethan-puyaubreau/smc2025-gpu-energy-poster#data-and-reproduction), converted to this format |
 
 ---
 
