@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use std::fs;
 use std::path::Path;
 use std::process::Command;
 use tempfile::tempdir;
@@ -9,9 +10,12 @@ use crate::analyze_and_report;
 ///
 /// Returns the exit code of the application so that batch jobs see its failures.
 /// The trace of a failed application is still analyzed when it can be loaded.
+/// Raw trace files are kept in `keep_trace` when given, otherwise they are
+/// written to a temporary directory removed on exit.
 pub fn run_instrumented_command(
     lib_path: &Path,
     app_args: &[String],
+    keep_trace: Option<&Path>,
     perfetto: Option<&Path>,
     report_html: Option<&Path>,
 ) -> Result<i32> {
@@ -21,8 +25,18 @@ pub fn run_instrumented_command(
         );
     }
 
-    let tmp_dir = tempdir().context("Failed to create temporary trace directory")?;
-    let trace_path = tmp_dir.path();
+    let tmp_dir;
+    let trace_path = match keep_trace {
+        Some(dir) => {
+            fs::create_dir_all(dir)
+                .with_context(|| format!("Failed to create trace directory: {}", dir.display()))?;
+            dir
+        }
+        None => {
+            tmp_dir = tempdir().context("Failed to create temporary trace directory")?;
+            tmp_dir.path()
+        }
+    };
 
     let exe = &app_args[0];
     let args = &app_args[1..];
@@ -32,6 +46,9 @@ pub fn run_instrumented_command(
         exe
     );
     println!("  [kokkos-energy] Using connector: {}", lib_path.display());
+    if let Some(dir) = keep_trace {
+        println!("  [kokkos-energy] Keeping raw trace in: {}", dir.display());
+    }
 
     let mut cmd = Command::new(exe);
     cmd.args(args);
@@ -70,7 +87,8 @@ mod tests {
     #[test]
     fn test_application_exit_code_is_returned() {
         let app = ["sh", "-c", "exit 3"].map(String::from);
-        let code = run_instrumented_command(Path::new("unused.so"), &app, None, None).unwrap();
+        let code =
+            run_instrumented_command(Path::new("unused.so"), &app, None, None, None).unwrap();
         assert_eq!(code, 3);
     }
 }
