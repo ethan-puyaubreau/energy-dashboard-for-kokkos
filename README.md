@@ -179,10 +179,13 @@ report the same device energy: do not sum device or total energies across ranks.
 
 ### Limits
 
-- The connector samples power every 20 ms. Most kernels are shorter than that, so
-  their power is interpolated between two samples rather than measured. Per-kernel
-  figures are reliable in aggregate over many calls, not for a single launch. The
-  report prints the share of affected events so this is never silent.
+- The connector samples power every 20 ms, but NVML itself refreshes the power
+  reading only about every 100 ms, from the last 25 ms of each interval. Kernels
+  shorter than that are not measured individually: their power is interpolated
+  between samples, and summing many launches only helps when they do not recur at
+  the same phase as the sensor window. Regions much longer than the refresh interval,
+  such as a solver phase or a whole algorithm, are measured reliably. The report
+  prints the share of short events so this is never silent.
 - Overlapping blocks share energy equally because a device reports a single power
   value. With the default Kokkos global fencing, kernels do not overlap and this
   rule never applies.
