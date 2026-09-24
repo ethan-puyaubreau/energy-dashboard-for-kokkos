@@ -7,9 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-24
+
 ### Added
 
 - Zenodo DOI (10.5281/zenodo.22943410, all versions) in the README and `CITATION.cff`.
+- `device_count` and `mpi_rank` in `metadata.json` are part of the trace format.
+
+### Changed
+
+- The package and the binary are renamed from `energy-dashboard-for-kokkos` to
+  `energy-for-kokkos`, since the tool writes reports and is not a dashboard. Release
+  archives follow the new name.
+- The connector is taken from the kokkos-tools fork (`profiling/energy-profiler`)
+  instead of a copy under `connector/`. The library is now `libkp_energy_profiler.so`.
+
+### Removed
+
+- The `energy_joules` column of `power_samples.csv`. Traces that still carry it are
+  read as before.
 
 ## [0.3.0] - 2026-09-24
 
@@ -79,6 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trapezoidal energy integration and attribution per region and kernel.
 - Terminal report, Perfetto trace export and HTML report.
 
-[Unreleased]: https://github.com/ethan-puyaubreau/energy-for-kokkos/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/ethan-puyaubreau/energy-for-kokkos/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/ethan-puyaubreau/energy-for-kokkos/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ethan-puyaubreau/energy-for-kokkos/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ethan-puyaubreau/energy-for-kokkos/releases/tag/v0.2.0
