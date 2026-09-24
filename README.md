@@ -1,17 +1,17 @@
 # energy-dashboard-for-kokkos
 
-High-performance energy analysis and profiling tool for Kokkos applications.
+Attributes measured GPU energy to the regions and kernels of a Kokkos application.
 
 `energy-dashboard-for-kokkos` provides attribution of electrical energy (Joules) and average power (Watts) to Kokkos execution blocks (`UserRegion`, `parallel_for`, `parallel_reduce`, `parallel_scan`, and memory movements).
 
 > **Note on Kokkos Trademark & Affiliation:**
-> `energy-dashboard-for-kokkos` is an independent, community-driven analysis tool. It is not an official project of the Kokkos ecosystem nor endorsed by the Linux Foundation.
+> `energy-dashboard-for-kokkos` is an independent analysis tool. It is not an official project of the Kokkos ecosystem nor endorsed by the Linux Foundation.
 
 ## Key Features
 
-- **Zero-Daemon, Zero-Docker:** Single native binary suitable for unprivileged HPC environments.
-- **Hierarchical Energy Attribution:** Accurately attributes energy across enclosing regions and kernels using trapezoidal numerical integration.
-- **HPC Console Report:** Formatted summary table printed directly to stdout (ideal for Slurm batch job logs).
+- **Single binary:** no daemon, no container, runs unprivileged on a compute node.
+- **Hierarchical attribution:** energy of each region and kernel, inclusive and exclusive, by trapezoidal integration of the power trace (see Limits for what that can and cannot resolve).
+- **Console report:** a summary table on stdout, readable in a Slurm job log.
 - **Perfetto / Chrome Tracing Export:** Generate interactive `trace.json` timelines viewable at [ui.perfetto.dev](https://ui.perfetto.dev).
 - **Standalone HTML Dashboard:** Export self-contained offline reports (`report.html`) with embedded interactive Plotly charts, usable on compute nodes without network access.
 - **Direct Runner Mode:** Transparently launch an application and profile it in a single command.
@@ -50,9 +50,8 @@ accelerators are not sampled by the connector.
 
 | Component | Version |
 | :--- | :--- |
-| GPU | NVIDIA GeForce RTX 3080 Ti (Ampere) |
-| System | Ubuntu on WSL2 |
-| Kokkos | 5.2.2, CUDA backend |
+| GPU | NVIDIA GeForce RTX 3080 Ti (Ampere), Ubuntu on WSL2, Kokkos 5.2.2 CUDA backend: connector and analysis |
+| GPU | NVIDIA H100 NVL (Hopper): analysis of the 128 ArborX DBSCAN runs traced in 2025 and [published with the SMC 2025 poster](https://github.com/ethan-puyaubreau/smc2025-gpu-energy-poster#data-and-reproduction), converted to this format |
 
 ---
 
@@ -81,8 +80,10 @@ The resulting standalone binary is located at `target/release/energy-dashboard-f
 
 The KokkosP connector library is currently available in the [`feat/v1-energy-profiler`](https://github.com/ethan-puyaubreau/kokkos-tools/tree/feat/v1-energy-profiler) branch of the `kokkos-tools` fork.
 
-Compile the connector:
+It is a single C++ file whose only dependency is NVML. Download it at a fixed commit and
+compile it:
 ```bash
+curl -LO https://raw.githubusercontent.com/ethan-puyaubreau/kokkos-tools/ad5d3e854770af58e98a1696061a593c23980773/profiling/energy-profiler/kp_energy_profiler.cpp
 g++ -std=c++20 -O3 -fPIC -shared kp_energy_profiler.cpp \
     -I/usr/local/cuda/include -L/usr/lib/x86_64-linux-gnu -lnvidia-ml -lpthread \
     -o libkokkos_energy.so
