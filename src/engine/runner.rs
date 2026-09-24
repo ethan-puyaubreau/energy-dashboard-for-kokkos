@@ -3,9 +3,7 @@ use std::path::Path;
 use std::process::Command;
 use tempfile::tempdir;
 
-use crate::engine;
-use crate::parser;
-use crate::report;
+use crate::analyze_and_report;
 
 /// Run a command instrumented with the Kokkos energy connector library.
 pub fn run_instrumented_command(
@@ -49,25 +47,5 @@ pub fn run_instrumented_command(
     }
 
     println!("\n  [kokkos-energy] Application finished. Analyzing trace...");
-    let trace = parser::load_trace_dir(trace_path)?;
-    let analysis = engine::analyze_trace(&trace);
-
-    // Display terminal table
-    report::print_terminal_report(&trace, &analysis);
-
-    // Optional exports
-    if let Some(perfetto_path) = perfetto {
-        report::export_perfetto_trace(&trace, perfetto_path)?;
-        println!("  Exported Perfetto trace to: {}", perfetto_path.display());
-    }
-
-    if let Some(html_path) = report_html {
-        report::export_html_report(&trace, &analysis, html_path)?;
-        println!(
-            "  Exported interactive HTML report to: {}",
-            html_path.display()
-        );
-    }
-
-    Ok(())
+    analyze_and_report(trace_path, perfetto, report_html)
 }
