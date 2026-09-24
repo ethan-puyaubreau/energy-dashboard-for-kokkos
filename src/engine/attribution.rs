@@ -23,6 +23,15 @@ pub struct TraceAnalysis {
     pub regions: Vec<RegionMetrics>,
 }
 
+/// Energy in Joules summed over every power series between two timestamps.
+fn energy_joules(trace: &Trace, start_ns: u64, end_ns: u64) -> f64 {
+    trace
+        .series
+        .iter()
+        .map(|s| integrate_energy_joules(&s.samples, start_ns, end_ns))
+        .sum()
+}
+
 /// Analyze a complete trace and compute energy attribution per region/kernel.
 pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
     if trace.events.is_empty() {
@@ -38,7 +47,7 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
     let min_start = trace.events.iter().map(|e| e.start_ns).min().unwrap_or(0);
     let max_end = trace.events.iter().map(|e| e.end_ns).max().unwrap_or(0);
     let total_trace_duration_sec = (max_end.saturating_sub(min_start)) as f64 / 1_000_000_000.0;
-    let total_trace_energy_joules = integrate_energy_joules(&trace.samples, min_start, max_end);
+    let total_trace_energy_joules = energy_joules(trace, min_start, max_end);
     let avg_trace_power_watts = if total_trace_duration_sec > 0.0 {
         total_trace_energy_joules / total_trace_duration_sec
     } else {
@@ -56,7 +65,7 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
 
     for event in &trace.events {
         let dur = event.duration_sec();
-        let energy = integrate_energy_joules(&trace.samples, event.start_ns, event.end_ns);
+        let energy = energy_joules(trace, event.start_ns, event.end_ns);
 
         let entry = map
             .entry((event.name.clone(), event.category))

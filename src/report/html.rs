@@ -21,17 +21,16 @@ pub fn export_html_report<P: AsRef<Path>>(
         .events
         .iter()
         .map(|e| e.start_ns)
-        .chain(trace.samples.iter().map(|s| s.timestamp_ns))
+        .chain(trace.samples().map(|s| s.timestamp_ns))
         .min()
         .unwrap_or(0);
 
     // Prepare time-series points
     let time_sec: Vec<f64> = trace
-        .samples
-        .iter()
+        .samples()
         .map(|s| (s.timestamp_ns.saturating_sub(min_ts_ns)) as f64 / 1_000_000_000.0)
         .collect();
-    let power_watts: Vec<f64> = trace.samples.iter().map(|s| s.power_watts).collect();
+    let power_watts: Vec<f64> = trace.samples().map(|s| s.power_watts).collect();
 
     // Prepare summary bar chart data
     let region_names: Vec<String> = analysis.regions.iter().map(|r| r.name.clone()).collect();
