@@ -80,13 +80,18 @@ pub fn run_instrumented_command(
     }
 }
 
-#[cfg(all(test, unix))]
+#[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_application_exit_code_is_returned() {
-        let app = ["sh", "-c", "exit 3"].map(String::from);
+        let app = if cfg!(windows) {
+            ["cmd", "/C", "exit 3"]
+        } else {
+            ["sh", "-c", "exit 3"]
+        }
+        .map(String::from);
         let code =
             run_instrumented_command(Path::new("unused.so"), &app, None, None, None).unwrap();
         assert_eq!(code, 3);
