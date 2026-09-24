@@ -35,8 +35,8 @@ fn trapezoid(t0_ns: u64, p0: f64, t1_ns: u64, p1: f64) -> f64 {
 /// `samples` must be sorted by timestamp.
 ///
 /// Returns energy in Joules between `start_ns` and `end_ns`.
-/// Hardware cumulative energy counters are ignored: they proved unreliable on
-/// NVIDIA GPUs, so sampled power is the only reference.
+/// Hardware cumulative energy counters are ignored: the analysis relies on sampled power
+/// only, the same method for every device.
 pub fn integrate_energy_joules(samples: &[PowerSample], start_ns: u64, end_ns: u64) -> f64 {
     if samples.is_empty() || start_ns >= end_ns {
         return 0.0;

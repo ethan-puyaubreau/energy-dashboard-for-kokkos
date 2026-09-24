@@ -80,21 +80,19 @@ The resulting standalone binary is located at `target/release/energy-dashboard-f
 
 ### 2. Generate a trace with the profiling connector
 
-The KokkosP connector library is currently available in the [`feat/v1-energy-profiler`](https://github.com/ethan-puyaubreau/kokkos-tools/tree/feat/v1-energy-profiler) branch of the `kokkos-tools` fork.
+The KokkosP connector is in [`connector/`](connector): a single C++ file whose only
+dependency is NVML. It writes the trace format described in [DATA_SPEC.md](DATA_SPEC.md).
+CI builds it against an NVML stub, traces a simulated Kokkos run with it and analyzes the
+result. The upstream pull requests
+([#299](https://github.com/kokkos/kokkos-tools/pull/299),
+[#301](https://github.com/kokkos/kokkos-tools/pull/301)) carry the earlier 2025 connector.
 
-It is a single C++ file whose only dependency is NVML. Download it at a fixed commit and
-compile it:
+Build it with CMake (needs the CUDA toolkit for NVML):
 ```bash
-curl -LO https://raw.githubusercontent.com/ethan-puyaubreau/kokkos-tools/ad5d3e854770af58e98a1696061a593c23980773/profiling/energy-profiler/kp_energy_profiler.cpp
-g++ -std=c++20 -O3 -fPIC -shared kp_energy_profiler.cpp \
-    -I/usr/local/cuda/include -L/usr/lib/x86_64-linux-gnu -lnvidia-ml -lpthread \
-    -o libkokkos_energy.so
+cmake -S connector -B build-connector -DCMAKE_BUILD_TYPE=Release
+cmake --build build-connector
+# -> build-connector/libkokkos_energy.so
 ```
-
-The upstream pull requests ([#299](https://github.com/kokkos/kokkos-tools/pull/299),
-[#301](https://github.com/kokkos/kokkos-tools/pull/301)) carry the 2025 connector. This v1
-connector writes the trace format described in [DATA_SPEC.md](DATA_SPEC.md) and lives on the
-fork branch until those are merged.
 
 Traces written by the 2025 version of the connector, such as the ones published with the
 [SMC 2025 poster](https://github.com/ethan-puyaubreau/smc2025-gpu-energy-poster#data-and-reproduction),
@@ -177,7 +175,7 @@ Output example (rows below 0.1% trimmed):
   trapezoidal rule, then the series are summed.
 - Power is linearly interpolated at block boundaries.
 - Sampled power is the only reference. Hardware cumulative energy counters are
-  ignored because they proved unreliable on NVIDIA GPUs.
+  ignored: the analysis relies on sampled power only, so one method applies to every device.
 - Blocks that overlap without being nested, such as concurrent kernels, share the
   energy of the overlapping interval equally.
 
