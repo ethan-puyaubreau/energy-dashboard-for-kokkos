@@ -14,13 +14,21 @@ pub fn parse_events_csv<P: AsRef<Path>>(path: P) -> Result<Vec<Event>> {
         .from_reader(file);
 
     let mut events = Vec::new();
-    for result in rdr.deserialize() {
+    for (index, result) in rdr.deserialize().enumerate() {
         let event: Event = result.with_context(|| {
             format!(
                 "Malformed record in events file: {}",
                 path.as_ref().display()
             )
         })?;
+
+        if event.end_ns < event.start_ns {
+            anyhow::bail!(
+                "Event ends before it starts in events file {} at record {}",
+                path.as_ref().display(),
+                index + 1
+            );
+        }
         events.push(event);
     }
 
@@ -43,5 +51,16 @@ mod tests {
             events[1].category,
             crate::model::RegionCategory::ParallelFor
         );
+    }
+
+    #[test]
+    fn test_reject_event_ending_before_start() {
+        let mut file = tempfile::NamedTempFile::new().unwrap();
+        std::io::Write::write_all(
+            &mut file,
+            b"id,parent_id,name,category,start_ns,end_ns\n1,0,Main,USER_REGION,500,100\n",
+        )
+        .unwrap();
+        assert!(parse_events_csv(file.path()).is_err());
     }
 }
