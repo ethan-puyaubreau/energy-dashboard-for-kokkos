@@ -6,6 +6,7 @@ use std::path::Path;
 
 use crate::engine::TraceAnalysis;
 use crate::model::Trace;
+use crate::report::sampling_note;
 
 /// Plotly bundle embedded so the report renders without network access.
 const PLOTLY_JS: &str = include_str!("../../assets/plotly-2.35.2.min.js");
@@ -64,6 +65,9 @@ pub fn export_html_report<P: AsRef<Path>>(
         .unwrap_or("Unknown Node");
 
     let timeline_traces_json = serde_json::to_string(&timeline_traces)?;
+    let note_html = sampling_note(analysis)
+        .map(|note| format!(r#"<div class="meta">Note: {note}</div>"#))
+        .unwrap_or_default();
     let region_names_json = serde_json::to_string(&region_names)?;
     let region_energies_json = serde_json::to_string(&region_energies)?;
 
@@ -116,6 +120,7 @@ pub fn export_html_report<P: AsRef<Path>>(
   <div class="header">
     <h1>Kokkos Energy Profiling Report</h1>
     <div class="meta">Application: <strong>{app_name}</strong> | Host: <strong>{hostname}</strong></div>
+    {note_html}
   </div>
 
   <div class="card-grid">
@@ -189,6 +194,7 @@ pub fn export_html_report<P: AsRef<Path>>(
         avg_power = analysis.avg_trace_power_watts,
         num_regions = analysis.regions.len(),
         timeline_traces_json = timeline_traces_json,
+        note_html = note_html,
         region_names_json = region_names_json,
         region_energies_json = region_energies_json
     );
