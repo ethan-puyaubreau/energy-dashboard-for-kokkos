@@ -9,7 +9,7 @@ Attributes measured GPU energy to the regions and kernels of a Kokkos applicatio
 > **Note on Kokkos Trademark & Affiliation:**
 > `energy-dashboard-for-kokkos` is an independent analysis tool. It is not an official project of the Kokkos ecosystem nor endorsed by the Linux Foundation.
 
-## Key Features
+## Features
 
 - **Single binary:** no daemon, no container, runs unprivileged on a compute node.
 - **Hierarchical attribution:** energy of each region and kernel, inclusive and exclusive, by trapezoidal integration of the power trace (see Limits for what that can and cannot resolve).
@@ -53,11 +53,11 @@ accelerators are not sampled by the connector.
 | GPU | What was tested |
 | :--- | :--- |
 | NVIDIA GeForce RTX 3080 Ti (Ampere) | Connector and analysis, Ubuntu on WSL2, Kokkos 5.2.2 CUDA backend |
-| NVIDIA H100 NVL (Hopper) | Analysis of the 128 ArborX DBSCAN runs traced in 2025 and [published with the SMC 2025 poster](https://github.com/ethan-puyaubreau/smc2025-gpu-energy-poster#data-and-reproduction), converted to this format |
+| NVIDIA H100 NVL (Hopper) | Analysis of the 128 ArborX DBSCAN runs traced in 2025 and [published with the SMC 2025 poster](https://github.com/ethan-puyaubreau/smc2025-gpu-energy-poster#data-and-reproduction), converted to this format; one run is a regression test |
 
 ---
 
-## Quick Start
+## Quick start
 
 ### 1. Install
 
@@ -101,7 +101,7 @@ Traces written by the 2025 version of the connector, such as the ones published 
 use an older CSV layout. Convert them with `analysis/to_trace_v1.py` from that repository, then
 analyze the output directory as below.
 
-### 3. Usage Modes
+### 3. Usage modes
 
 #### Mode A: Direct Runner (Recommended)
 
@@ -132,7 +132,7 @@ energy-dashboard-for-kokkos analyze ./my_trace --report report.html --perfetto t
 Output example (rows below 0.1% trimmed):
 
 ```text
-  Kokkos Energy Analysis - App: energy_bench (Host: wsl-rtx3080ti, Backend: CUDA)
+  energy-dashboard-for-kokkos - App: energy_bench (Host: wsl-rtx3080ti, Backend: CUDA)
 ┌─────────────────────────────────────────────┬─────────────────┬───────┬──────────────┬─────────────────┬─────────────────┬───────────────┬────────┐
 │ Block / Kernel                              ┆ Category        ┆ Calls ┆ Duration (s) ┆ Energy Incl (J) ┆ Energy Self (J) ┆ Avg Power (W) ┆ % Self │
 ╞═════════════════════════════════════════════╪═════════════════╪═══════╪══════════════╪═════════════════╪═════════════════╪═══════════════╪════════╡
@@ -157,7 +157,7 @@ Output example (rows below 0.1% trimmed):
 
 ---
 
-## Reading the Report
+## Reading the report
 
 - **Energy Incl** is the energy spent while a block was active, children included.
 - **Energy Self** is the energy spent in the block itself, children excluded. The
@@ -171,7 +171,7 @@ Output example (rows below 0.1% trimmed):
   sampling period or the NVML refresh, whichever is longer), with the share of such
   events. See Limits below.
 
-### Attribution Rules
+### Attribution rules
 
 - Each power series (one per domain and device) is integrated on its own with the
   trapezoidal rule, then the series are summed.
@@ -181,7 +181,7 @@ Output example (rows below 0.1% trimmed):
 - Blocks that overlap without being nested, such as concurrent kernels, share the
   energy of the overlapping interval equally.
 
-### Multi-Rank Traces
+### Multi-rank traces
 
 Under MPI or Slurm the connector writes one `rank_<N>` subdirectory per rank.
 `analyze` and `run` detect them and print one report per rank, in rank order.
@@ -206,17 +206,17 @@ report the same device energy: do not sum device or total energies across ranks.
 
 ---
 
-## Visualizing Traces
+## Visualizing traces
 
-### 1. Interactive Perfetto Timeline
+### 1. Interactive Perfetto timeline
 Pass `--perfetto trace.json` and open [ui.perfetto.dev](https://ui.perfetto.dev). Drag-and-drop the JSON file to navigate slices with `W`, `A`, `S`, `D`. Nested blocks are stacked on a single track. Blocks that overlap without being nested are moved to an extra track, and each device gets its own power counter.
 
-### 2. Standalone HTML Report
+### 2. Standalone HTML report
 Pass `--report report.html` and open the generated file directly in any web browser.
 
 ---
 
-## Data Specification
+## Data specification
 
 See [DATA_SPEC.md](DATA_SPEC.md) for complete details on the underlying `events.csv`, `power_samples.csv`, and `metadata.json` schemas.
 
