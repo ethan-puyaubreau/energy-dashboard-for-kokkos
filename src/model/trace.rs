@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use super::event::Event;
 use super::sample::{PowerSample, PowerSeries};
@@ -50,6 +51,50 @@ impl Trace {
             events,
             series,
         }
+    }
+
+    /// Index of the parent of each event, `None` for roots or unknown parents.
+    pub fn event_parents(&self) -> Vec<Option<usize>> {
+        let index: HashMap<u64, usize> = self
+            .events
+            .iter()
+            .enumerate()
+            .map(|(i, e)| (e.id, i))
+            .collect();
+
+        self.events
+            .iter()
+            .enumerate()
+            .map(|(i, e)| index.get(&e.parent_id).copied().filter(|&p| p != i))
+            .collect()
+    }
+
+    /// Nesting depth of each event, 0 for roots.
+    pub fn event_depths(&self) -> Vec<usize> {
+        let parents = self.event_parents();
+        let n = parents.len();
+        let mut depths: Vec<Option<usize>> = vec![None; n];
+
+        for i in 0..n {
+            // Walk up to a root or an already resolved ancestor, bounded against cycles
+            let mut chain = Vec::new();
+            let mut current = Some(i);
+            while let Some(c) = current {
+                if depths[c].is_some() || chain.len() > n {
+                    break;
+                }
+                chain.push(c);
+                current = parents[c];
+            }
+
+            let mut depth = current.and_then(|c| depths[c]).map_or(0, |d| d + 1);
+            for &c in chain.iter().rev() {
+                depths[c] = Some(depth);
+                depth += 1;
+            }
+        }
+
+        depths.into_iter().map(|d| d.unwrap_or(0)).collect()
     }
 
     /// Iterate over every power sample of every series.

@@ -36,7 +36,7 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
             Cell::new(r.category.to_string()),
             Cell::new(r.call_count.to_string()),
             Cell::new(format!("{:.3}", r.total_duration_sec)),
-            Cell::new(format!("{:.2}", r.total_energy_joules)),
+            Cell::new(format!("{:.2}", r.inclusive_energy_joules)),
             Cell::new(format!("{:.1}", r.avg_power_watts)),
             Cell::new(format!("{:.1}%", r.energy_percentage)),
         ]));

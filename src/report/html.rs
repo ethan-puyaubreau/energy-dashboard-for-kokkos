@@ -37,7 +37,7 @@ pub fn export_html_report<P: AsRef<Path>>(
     let region_energies: Vec<f64> = analysis
         .regions
         .iter()
-        .map(|r| r.total_energy_joules)
+        .map(|r| r.inclusive_energy_joules)
         .collect();
 
     let app_name = trace

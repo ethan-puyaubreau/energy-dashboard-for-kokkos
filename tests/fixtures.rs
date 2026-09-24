@@ -29,9 +29,15 @@ fn synthetic_run_energy_per_region() {
     let analysis = analyze_fixture("synthetic_run");
 
     assert_eq!(analysis.regions.len(), 3);
-    assert_close(region(&analysis, "MatVec").total_energy_joules, 600.0);
-    assert_close(region(&analysis, "Reduction").total_energy_joules, 900.0);
-    assert_close(region(&analysis, "MainLoop").total_energy_joules, 1875.0);
+    assert_close(region(&analysis, "MatVec").inclusive_energy_joules, 600.0);
+    assert_close(
+        region(&analysis, "Reduction").inclusive_energy_joules,
+        900.0,
+    );
+
+    let main_loop = region(&analysis, "MainLoop");
+    assert_close(main_loop.inclusive_energy_joules, 1875.0);
+    assert_close(main_loop.exclusive_energy_joules, 375.0);
 }
 
 #[test]
@@ -39,7 +45,7 @@ fn multi_domain_series_are_integrated_separately() {
     let analysis = analyze_fixture("multi_domain_run");
 
     // GPU holds 100 W and CPU holds 50 W during 2 seconds
-    assert_close(region(&analysis, "Step").total_energy_joules, 300.0);
+    assert_close(region(&analysis, "Step").inclusive_energy_joules, 300.0);
 }
 
 #[test]
@@ -48,8 +54,13 @@ fn real_rtx3080ti_trace_is_consistent() {
 
     assert!(analysis.total_trace_energy_joules > 0.0);
     assert!(!analysis.regions.is_empty());
+    let mut exclusive_sum = 0.0;
     for r in &analysis.regions {
-        assert!(r.total_energy_joules.is_finite() && r.total_energy_joules >= 0.0);
-        assert!(r.total_energy_joules <= analysis.total_trace_energy_joules + 1e-6);
+        assert!(r.inclusive_energy_joules.is_finite() && r.inclusive_energy_joules >= 0.0);
+        assert!(r.exclusive_energy_joules <= r.inclusive_energy_joules + 1e-6);
+        exclusive_sum += r.exclusive_energy_joules;
     }
+
+    // Exclusive energy never counts a Joule twice
+    assert!(exclusive_sum <= analysis.total_trace_energy_joules + 1e-6);
 }
