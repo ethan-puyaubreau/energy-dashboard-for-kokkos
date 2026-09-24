@@ -44,8 +44,15 @@ jobs:
 
       - name: Check binary is static
         run: |
-          file "target/$TARGET/release/kokkos-energy" | grep -q "statically linked"
-          "target/$TARGET/release/kokkos-energy" --version
+          binary="target/$TARGET/release/kokkos-energy"
+          file "$binary"
+          if readelf -d "$binary" | grep -q NEEDED; then
+            echo "binary links shared libraries" && exit 1
+          fi
+          if readelf -l "$binary" | grep -q "program interpreter"; then
+            echo "binary requires a dynamic loader" && exit 1
+          fi
+          "$binary" --version
 
       - name: Package archive
         run: |
