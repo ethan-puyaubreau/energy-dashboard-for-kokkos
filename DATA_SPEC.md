@@ -11,6 +11,10 @@ An execution trace consists of a directory containing:
 
 All timestamps are expressed as **64-bit unsigned integers in nanoseconds** (`uint64_t`), referencing UNIX epoch.
 
+When the connector detects an MPI rank, the files are written to a `rank_<N>`
+subdirectory of the output path. `kokkos-energy` resolves a single rank
+subdirectory automatically.
+
 ---
 
 ## 2. File Schemas
@@ -35,6 +39,12 @@ id,parent_id,name,category,start_ns,end_ns
 3,1,Reduction,PARALLEL_REDUCE,1723500004200000000,1723500007900000000
 ```
 
+Constraints:
+- The file must contain at least one event.
+- `end_ns` must be greater than or equal to `start_ns`.
+- A child event is expected to lie within its parent. Events that overlap without
+  being nested share the energy of the overlapping interval.
+
 ### 2.2 `power_samples.csv`
 Defines the continuous physical telemetry collected by the asynchronous sampling daemon.
 
@@ -55,6 +65,12 @@ timestamp_ns,domain,device_id,power_watts,energy_joules
 1723500003000000000,GPU,0,300.0,
 1723500004000000000,GPU,0,200.0,
 ```
+
+Constraints:
+- The file must contain at least one sample.
+- `power_watts` and `energy_joules` must be finite numbers.
+- Samples are grouped into one series per `(domain, device_id)` pair and each series
+  is integrated independently.
 
 ### 2.3 `metadata.json` (Optional)
 ```json
