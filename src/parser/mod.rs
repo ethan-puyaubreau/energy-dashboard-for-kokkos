@@ -107,4 +107,30 @@ mod tests {
         .unwrap();
         assert!(load_trace_dir(dir.path()).is_err());
     }
+
+    #[test]
+    fn test_metadata_written_by_the_connector() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("events.csv"),
+            "id,parent_id,name,category,start_ns,end_ns\n1,0,Main,USER_REGION,100,500\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("power_samples.csv"),
+            "timestamp_ns,domain,device_id,power_watts\n100,GPU,0,250.0\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("metadata.json"),
+            r#"{"spec_version": "1.0", "app_name": "app", "hostname": "node",
+                "kokkos_backend": "CUDA", "device_count": 4,
+                "start_epoch_ns": 100, "mpi_rank": 3}"#,
+        )
+        .unwrap();
+
+        let meta = load_trace_dir(dir.path()).unwrap().metadata.unwrap();
+        assert_eq!(meta.device_count, Some(4));
+        assert_eq!(meta.mpi_rank, Some(3));
+    }
 }

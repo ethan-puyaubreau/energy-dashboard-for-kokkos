@@ -74,12 +74,28 @@ Constraints:
   is integrated independently.
 
 ### 2.3 `metadata.json` (Optional)
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `spec_version` | `string` | Version of this specification, `"1.0"` |
+| `app_name` | `string` | (Optional) Executable name of the profiled application |
+| `hostname` | `string` | (Optional) Host the application ran on |
+| `kokkos_backend` | `string` | (Optional) Kokkos execution backend, for instance `CUDA` |
+| `device_count` | `uint32` | (Optional) Number of GPUs the connector sampled |
+| `start_epoch_ns` | `uint64` | (Optional) Connector start timestamp in nanoseconds since UNIX epoch |
+| `mpi_rank` | `uint32` | (Optional) MPI rank of the process, present only when the connector detects one |
+
+Unknown fields are ignored.
+
+Example:
 ```json
 {
   "spec_version": "1.0",
   "app_name": "energy_bench",
   "hostname": "compute-node-42",
   "kokkos_backend": "CUDA",
-  "start_epoch_ns": 1723500000000000000
+  "device_count": 4,
+  "start_epoch_ns": 1723500000000000000,
+  "mpi_rank": 3
 }
 ```

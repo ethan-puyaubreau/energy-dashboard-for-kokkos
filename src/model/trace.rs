@@ -18,8 +18,12 @@ pub struct Metadata {
     pub hostname: Option<String>,
     /// Kokkos execution backend, for instance `CUDA`.
     pub kokkos_backend: Option<String>,
+    /// Number of GPUs the connector sampled.
+    pub device_count: Option<u32>,
     /// Connector start timestamp in nanoseconds since UNIX epoch.
     pub start_epoch_ns: Option<u64>,
+    /// MPI rank of the process, absent outside MPI.
+    pub mpi_rank: Option<u32>,
 }
 
 /// Unified trace data containing all events and telemetry samples.

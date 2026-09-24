@@ -238,7 +238,9 @@ mod tests {
             app_name: Some("<b>app</b>".to_string()),
             hostname: None,
             kokkos_backend: None,
+            device_count: None,
             start_epoch_ns: None,
+            mpi_rank: None,
         };
         let event = Event {
             id: 1,
