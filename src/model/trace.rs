@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::cmp::Reverse;
 use std::collections::HashMap;
 
 use super::event::Event;
@@ -28,7 +29,8 @@ impl Trace {
         mut events: Vec<Event>,
         mut samples: Vec<PowerSample>,
     ) -> Self {
-        events.sort_by_key(|e| e.start_ns);
+        // Parents come before their children when both start together
+        events.sort_by_key(|e| (e.start_ns, Reverse(e.end_ns)));
         samples.sort_by_key(|s| s.timestamp_ns);
 
         let mut series: Vec<PowerSeries> = Vec::new();
