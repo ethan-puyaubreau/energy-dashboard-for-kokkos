@@ -1,10 +1,6 @@
-pub mod engine;
-pub mod model;
-pub mod parser;
-pub mod report;
-
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use kokkos_energy::{engine, parser, report};
 use std::path::PathBuf;
 
 #[derive(Parser)]
