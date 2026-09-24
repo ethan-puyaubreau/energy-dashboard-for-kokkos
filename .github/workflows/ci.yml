@@ -43,16 +43,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # The connector is maintained in the kokkos-tools fork. Bump the pinned commit
+      # to test the analysis against a newer connector.
+      - name: Checkout the connector
+        uses: actions/checkout@v4
+        with:
+          repository: ethan-puyaubreau/kokkos-tools
+          ref: 6a1e8b81458dd87a3df9338735dd62239b6bf4af # feat/v1-energy-profiler
+          path: kokkos-tools
+          sparse-checkout: profiling/energy-profiler
+
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build the connector against the NVML stub
         run: |
-          cmake -S connector -B build-connector -DENERGY_CONNECTOR_NVML_STUB=ON
+          cmake -S kokkos-tools/profiling/energy-profiler -B build-connector -DKP_ENERGY_PROFILER_NVML_STUB=ON
           cmake --build build-connector
 
       - name: Trace a simulated Kokkos run
-        run: KOKKOS_TOOLS_OUTPUT_PATH=trace build-connector/connector_smoke build-connector/libenergy_dashboard_connector.so
+        run: KOKKOS_TOOLS_OUTPUT_PATH=trace build-connector/kp_energy_profiler_smoke build-connector/libkp_energy_profiler.so
 
       - name: Analyze the trace
         run: |

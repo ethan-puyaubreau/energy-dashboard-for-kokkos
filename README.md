@@ -32,7 +32,7 @@ accelerators are not sampled by the connector.
 - Build from source: Rust 1.88 or newer. The `analyze` command runs on any platform
   supported by Rust, the `run` command needs a platform where the connector runs.
 
-### Profiling connector (`libenergy_dashboard_connector.so`)
+### Profiling connector (`libkp_energy_profiler.so`)
 
 - Linux x86_64, native or WSL2.
 - NVIDIA driver providing NVML (`libnvidia-ml.so`, installed with the driver). Power
@@ -81,18 +81,21 @@ The resulting standalone binary is located at `target/release/energy-dashboard-f
 
 ### 2. Generate a trace with the profiling connector
 
-The KokkosP connector is in [`connector/`](connector): a single C++ file whose only
-dependency is NVML. It writes the trace format described in [DATA_SPEC.md](DATA_SPEC.md).
-CI builds it against an NVML stub, traces a simulated Kokkos run with it and analyzes the
-result. The upstream pull requests
+The KokkosP connector is maintained in
+[`profiling/energy-profiler`](https://github.com/ethan-puyaubreau/kokkos-tools/tree/feat/v1-energy-profiler/profiling/energy-profiler)
+of the kokkos-tools fork: a single C++ file whose only dependency is NVML. It writes the
+trace format described in [DATA_SPEC.md](DATA_SPEC.md). CI builds a pinned commit of it
+against an NVML stub, traces a simulated Kokkos run with it and analyzes the result. The
+upstream pull requests
 ([#299](https://github.com/kokkos/kokkos-tools/pull/299),
 [#301](https://github.com/kokkos/kokkos-tools/pull/301)) carry the earlier 2025 connector.
 
 Build it with CMake (needs the CUDA toolkit for NVML):
 ```bash
-cmake -S connector -B build-connector -DCMAKE_BUILD_TYPE=Release
+git clone -b feat/v1-energy-profiler https://github.com/ethan-puyaubreau/kokkos-tools
+cmake -S kokkos-tools/profiling/energy-profiler -B build-connector -DCMAKE_BUILD_TYPE=Release
 cmake --build build-connector
-# -> build-connector/libenergy_dashboard_connector.so
+# -> build-connector/libkp_energy_profiler.so
 ```
 
 Traces written by the 2025 version of the connector, such as the ones published with the
@@ -107,7 +110,7 @@ analyze the output directory as below.
 Run and analyze your Kokkos application in a single step:
 
 ```bash
-energy-dashboard-for-kokkos run --lib /path/to/libenergy_dashboard_connector.so --report report.html --perfetto trace.json -- ./my_app [args...]
+energy-dashboard-for-kokkos run --lib /path/to/libkp_energy_profiler.so --report report.html --perfetto trace.json -- ./my_app [args...]
 ```
 
 The raw trace is written to a temporary directory and removed on exit. Pass
@@ -120,7 +123,7 @@ If the application was run independently:
 
 ```bash
 # 1. Run with standard KokkosP environment variables
-export KOKKOS_TOOLS_LIBS=/path/to/libenergy_dashboard_connector.so
+export KOKKOS_TOOLS_LIBS=/path/to/libkp_energy_profiler.so
 export KOKKOS_TOOLS_OUTPUT_PATH=./my_trace
 ./my_app
 
