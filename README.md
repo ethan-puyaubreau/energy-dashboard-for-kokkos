@@ -202,3 +202,10 @@ Pass `--report report.html` and open the generated file directly in any web brow
 ## Data Specification
 
 See [DATA_SPEC.md](DATA_SPEC.md) for complete details on the underlying `events.csv`, `power_samples.csv`, and `metadata.json` schemas.
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, conventions and
+release process.
