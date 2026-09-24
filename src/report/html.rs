@@ -11,6 +11,22 @@ use crate::report::sampling_note;
 /// Plotly bundle embedded so the report renders without network access.
 const PLOTLY_JS: &str = include_str!("../../assets/plotly-2.35.2.min.js");
 
+/// Escape text inserted into HTML markup.
+fn escape_html(text: &str) -> String {
+    text.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;")
+}
+
+/// Serialize a value to JSON that is safe to embed inside a script element.
+///
+/// A kernel name containing `</script>` would otherwise close the element early.
+fn script_json<T: serde::Serialize>(value: &T) -> Result<String> {
+    Ok(serde_json::to_string(value)?.replace("</", "<\\/"))
+}
+
 /// Generate a standalone interactive HTML report using embedded Plotly.js.
 pub fn export_html_report<P: AsRef<Path>>(
     trace: &Trace,
@@ -64,12 +80,14 @@ pub fn export_html_report<P: AsRef<Path>>(
         .and_then(|m| m.hostname.as_deref())
         .unwrap_or("Unknown Node");
 
-    let timeline_traces_json = serde_json::to_string(&timeline_traces)?;
+    let app_name = escape_html(app_name);
+    let hostname = escape_html(hostname);
+    let timeline_traces_json = script_json(&timeline_traces)?;
     let note_html = sampling_note(analysis)
         .map(|note| format!(r#"<div class="meta">Note: {note}</div>"#))
         .unwrap_or_default();
-    let region_names_json = serde_json::to_string(&region_names)?;
-    let region_energies_json = serde_json::to_string(&region_energies)?;
+    let region_names_json = script_json(&region_names)?;
+    let region_energies_json = script_json(&region_energies)?;
 
     let html_content = format!(
         r#"<!DOCTYPE html>
@@ -203,4 +221,46 @@ pub fn export_html_report<P: AsRef<Path>>(
     file.flush()?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::engine::analyze_trace;
+    use crate::model::{DeviceDomain, Event, Metadata, PowerSample, RegionCategory};
+
+    #[test]
+    fn test_untrusted_names_are_escaped() {
+        let metadata = Metadata {
+            spec_version: "1.0".to_string(),
+            app_name: Some("<b>app</b>".to_string()),
+            hostname: None,
+            kokkos_backend: None,
+            start_epoch_ns: None,
+        };
+        let event = Event {
+            id: 1,
+            parent_id: 0,
+            name: "</script><b>kernel".to_string(),
+            category: RegionCategory::ParallelFor,
+            start_ns: 0,
+            end_ns: 10,
+        };
+        let sample = PowerSample {
+            timestamp_ns: 0,
+            domain: DeviceDomain::Gpu,
+            device_id: 0,
+            power_watts: 100.0,
+            energy_joules: None,
+        };
+        let trace = Trace::new(Some(metadata), vec![event], vec![sample]);
+        let file = tempfile::NamedTempFile::new().unwrap();
+        export_html_report(&trace, &analyze_trace(&trace), file.path()).unwrap();
+
+        let html = std::fs::read_to_string(file.path()).unwrap();
+        assert!(html.contains("&lt;b&gt;app&lt;/b&gt;"));
+        assert!(!html.contains("<b>app"));
+        // Only the Plotly bundle and the chart script close a script element
+        assert_eq!(html.matches("</script>").count(), 2);
+    }
 }
