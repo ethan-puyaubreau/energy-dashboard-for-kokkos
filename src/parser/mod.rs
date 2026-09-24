@@ -102,7 +102,7 @@ mod tests {
         .unwrap();
         std::fs::write(
             dir.path().join("power_samples.csv"),
-            "timestamp_ns,domain,device_id,power_watts,energy_joules\n",
+            "timestamp_ns,domain,device_id,power_watts\n",
         )
         .unwrap();
         assert!(load_trace_dir(dir.path()).is_err());

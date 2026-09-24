@@ -253,7 +253,6 @@ mod tests {
             domain: DeviceDomain::Gpu,
             device_id: 0,
             power_watts: 100.0,
-            energy_joules: None,
         };
         let trace = Trace::new(Some(metadata), vec![event], vec![sample]);
         let file = tempfile::NamedTempFile::new().unwrap();

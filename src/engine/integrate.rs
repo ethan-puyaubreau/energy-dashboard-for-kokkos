@@ -69,7 +69,6 @@ mod tests {
             domain: DeviceDomain::Gpu,
             device_id: 0,
             power_watts,
-            energy_joules: None,
         }
     }
 
@@ -101,21 +100,6 @@ mod tests {
         // Power is 150 W at 0.5 s and 160 W at 0.6 s
         let samples = vec![gpu(0.0, 100.0), gpu(2.0, 300.0)];
         assert!((integrate(&samples, 0.5, 0.6) - 15.5).abs() < 1e-6);
-    }
-
-    /// Attach a cumulative energy counter value to a sample.
-    fn with_counter(mut sample: PowerSample, energy_joules: f64) -> PowerSample {
-        sample.energy_joules = Some(energy_joules);
-        sample
-    }
-
-    #[test]
-    fn test_energy_counter_is_ignored() {
-        let samples = vec![
-            with_counter(gpu(0.0, 100.0), 0.0),
-            with_counter(gpu(1.0, 100.0), 5000.0),
-        ];
-        assert!((integrate(&samples, 0.0, 1.0) - 100.0).abs() < 1e-6);
     }
 
     #[test]

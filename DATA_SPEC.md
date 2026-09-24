@@ -6,7 +6,7 @@ This document formally specifies the input data format expected by `energy-dashb
 
 An execution trace consists of a directory containing:
 1. `events.csv`: Hierarchical Kokkos execution blocks (regions and kernels).
-2. `power_samples.csv`: Periodic hardware telemetry samples (CPU/GPU power).
+2. `power_samples.csv`: Periodic NVIDIA GPU power samples.
 3. `metadata.json` (optional): Experiment and host environment metadata.
 
 All timestamps are expressed as **64-bit unsigned integers in nanoseconds** (`uint64_t`), referencing UNIX epoch.
@@ -51,24 +51,25 @@ Defines the continuous physical telemetry collected by the asynchronous sampling
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `timestamp_ns` | `uint64` | Measurement timestamp in nanoseconds since UNIX epoch |
-| `domain` | `string` | Subsystem domain: `GPU`, `CPU_PKG`, `CPU_DRAM`, `NODE` |
-| `device_id` | `uint32` | Device index (GPU id or CPU socket id) |
+| `domain` | `string` | `GPU`, the only domain the connector writes. `CPU_PKG`, `CPU_DRAM` and `NODE` are also accepted |
+| `device_id` | `uint32` | Device index, the NVML index for a GPU |
 | `power_watts` | `float64` | Instantaneous power in Watts |
-| `energy_joules`| `float64` | (Optional) Hardware cumulative energy counter in Joules. Accepted but ignored by the analysis, the reference connector leaves it empty |
 
 Example:
 ```csv
-timestamp_ns,domain,device_id,power_watts,energy_joules
-1723500000000000000,GPU,0,250.0,
-1723500001000000000,GPU,0,250.0,
-1723500002000000000,GPU,0,300.0,
-1723500003000000000,GPU,0,300.0,
-1723500004000000000,GPU,0,200.0,
+timestamp_ns,domain,device_id,power_watts
+1723500000000000000,GPU,0,250.0
+1723500001000000000,GPU,0,250.0
+1723500002000000000,GPU,0,300.0
+1723500003000000000,GPU,0,300.0
+1723500004000000000,GPU,0,200.0
 ```
 
 Constraints:
 - The file must contain at least one sample.
-- `power_watts` and `energy_joules` must be finite numbers.
+- `power_watts` must be a finite number.
+- Energy is always integrated from `power_watts`. Traces written before the
+  `energy_joules` column was removed still carry it; it is ignored.
 - Samples are grouped into one series per `(domain, device_id)` pair and each series
   is integrated independently.
 
