@@ -1,6 +1,6 @@
 [package]
-name = "kokkos-energy"
-version = "0.2.0"
+name = "energy-dashboard-for-kokkos"
+version = "0.3.0"
 edition = "2021"
 rust-version = "1.88"
 authors = ["Ethan Puyaubreau <ethan.puyaubreau@gmail.com>"]

@@ -1,11 +1,11 @@
-# kokkos-energy
+# energy-dashboard-for-kokkos
 
 High-performance energy analysis and profiling tool for Kokkos applications.
 
-`kokkos-energy` provides attribution of electrical energy (Joules) and average power (Watts) to Kokkos execution blocks (`UserRegion`, `parallel_for`, `parallel_reduce`, `parallel_scan`, and memory movements).
+`energy-dashboard-for-kokkos` provides attribution of electrical energy (Joules) and average power (Watts) to Kokkos execution blocks (`UserRegion`, `parallel_for`, `parallel_reduce`, `parallel_scan`, and memory movements).
 
 > **Note on Kokkos Trademark & Affiliation:**
-> `kokkos-energy` is an independent, community-driven analysis tool. It is not an official project of the Kokkos ecosystem nor endorsed by the Linux Foundation.
+> `energy-dashboard-for-kokkos` is an independent, community-driven analysis tool. It is not an official project of the Kokkos ecosystem nor endorsed by the Linux Foundation.
 
 ## Key Features
 
@@ -23,7 +23,7 @@ High-performance energy analysis and profiling tool for Kokkos applications.
 Energy is measured on **NVIDIA GPUs only**. CPU packages, DRAM and other
 accelerators are not sampled by the connector.
 
-### Analysis tool (`kokkos-energy`)
+### Analysis tool (`energy-dashboard-for-kokkos`)
 
 - Prebuilt release binary: Linux x86_64, statically linked, no runtime dependency.
 - Build from source: Rust 1.88 or newer. The `analyze` command runs on any platform
@@ -65,8 +65,8 @@ Download the static Linux x86_64 binary from the
 check its checksum and extract it:
 
 ```bash
-sha256sum -c kokkos-energy-v0.2.0-x86_64-unknown-linux-musl.tar.gz.sha256
-tar xzf kokkos-energy-v0.2.0-x86_64-unknown-linux-musl.tar.gz
+sha256sum -c energy-dashboard-for-kokkos-v0.3.0-x86_64-unknown-linux-musl.tar.gz.sha256
+tar xzf energy-dashboard-for-kokkos-v0.3.0-x86_64-unknown-linux-musl.tar.gz
 ```
 
 Or build from source:
@@ -75,7 +75,7 @@ Or build from source:
 cargo build --release
 ```
 
-The resulting standalone binary is located at `target/release/kokkos-energy`.
+The resulting standalone binary is located at `target/release/energy-dashboard-for-kokkos`.
 
 ### 2. Generate a trace with the profiling connector
 
@@ -95,7 +95,7 @@ g++ -std=c++20 -O3 -fPIC -shared kp_energy_profiler.cpp \
 Run and analyze your Kokkos application in a single step:
 
 ```bash
-kokkos-energy run --lib /path/to/libkokkos_energy.so --report report.html --perfetto trace.json -- ./my_app [args...]
+energy-dashboard-for-kokkos run --lib /path/to/libkokkos_energy.so --report report.html --perfetto trace.json -- ./my_app [args...]
 ```
 
 The raw trace is written to a temporary directory and removed on exit. Pass
@@ -113,7 +113,7 @@ export KOKKOS_TOOLS_OUTPUT_PATH=./my_trace
 ./my_app
 
 # 2. Analyze the resulting directory
-kokkos-energy analyze ./my_trace --report report.html --perfetto trace.json
+energy-dashboard-for-kokkos analyze ./my_trace --report report.html --perfetto trace.json
 ```
 
 Output example (rows below 0.1% trimmed):

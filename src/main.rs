@@ -1,10 +1,10 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use kokkos_energy::{analyze_and_report, engine};
+use energy_dashboard_for_kokkos::{analyze_and_report, engine};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "kokkos-energy")]
+#[command(name = "energy-dashboard-for-kokkos")]
 #[command(author = "Ethan Puyaubreau <ethan.puyaubreau@gmail.com>")]
 #[command(version, about = "HPC energy analysis and profiling tool for Kokkos applications", long_about = None)]
 struct Cli {
