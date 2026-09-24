@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `CITATION.cff` with the software metadata.
+- Zenodo metadata (`.zenodo.json`), so each release is archived with a DOI.
 - The v1 KokkosP connector under `connector/` (`libenergy_dashboard_connector.so`), with a CMake build and a CI job that builds
   it against an NVML stub, traces a simulated Kokkos run and analyzes the trace.
 - A regression test on one ArborX DBSCAN run traced on an H100 NVL for the SMC 2025 poster.

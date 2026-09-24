@@ -1,0 +1,19 @@
+{
+  "title": "energy-dashboard-for-kokkos: per-region energy attribution for Kokkos applications",
+  "description": "Attributes measured GPU energy to the regions and kernels of a Kokkos application. A KokkosP connector records an NVML power trace and the region timestamps; a single Rust binary integrates the trace per region and kernel and reports it as a console table, a Perfetto trace and a standalone HTML report. Independent tool, not an official Kokkos project.",
+  "upload_type": "software",
+  "creators": [
+    {
+      "name": "Puyaubreau, Ethan",
+      "orcid": "0009-0003-1770-8830"
+    }
+  ],
+  "license": "Apache-2.0",
+  "keywords": ["Kokkos", "energy", "GPU", "HPC", "profiling", "NVML"],
+  "related_identifiers": [
+    {
+      "identifier": "https://ethan-puyaubreau.github.io/smc2025-gpu-energy-poster/",
+      "relation": "isSupplementTo"
+    }
+  ]
+}
