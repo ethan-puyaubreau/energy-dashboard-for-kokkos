@@ -1,0 +1,50 @@
+name: Bug report
+description: Wrong energy figures, a crash or an unexpected report
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issues with the KokkosP connector itself belong to the
+        [kokkos-tools fork](https://github.com/ethan-puyaubreau/kokkos-tools).
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened
+      description: What you expected and what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact kokkos-energy command and its output.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: kokkos-energy version
+      description: Output of `kokkos-energy --version`.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: GPU model, NVIDIA driver version, Kokkos version and backend, OS.
+      placeholder: |
+        GPU: RTX 3080 Ti
+        Driver: 560.xx
+        Kokkos: 5.2.2, CUDA
+        OS: Ubuntu 24.04 on WSL2
+    validations:
+      required: true
+  - type: textarea
+    id: trace
+    attributes:
+      label: Trace
+      description: >
+        Attach the trace directory (events.csv, power_samples.csv, metadata.json) as a
+        zip archive. `kokkos-energy run --keep-trace <DIR>` keeps it for you.
