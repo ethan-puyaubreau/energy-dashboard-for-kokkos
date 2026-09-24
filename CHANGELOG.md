@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.0] - 2026-09-24
 
+### Added
+
+- `CITATION.cff` with the software metadata.
+
 ### Changed
 
 - The package and the binary are renamed from `kokkos-energy` to
@@ -18,10 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   format and the command line options are unchanged.
 - The README states the NVML refresh limit: kernels shorter than about 100 ms are not
   measured individually, longer regions are.
-
-### Added
-
-- `CITATION.cff` with the software metadata.
 
 ## [0.2.0] - 2026-09-24
 
