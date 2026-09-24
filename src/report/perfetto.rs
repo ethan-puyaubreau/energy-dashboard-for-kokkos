@@ -19,18 +19,13 @@ pub fn export_perfetto_trace<P: AsRef<Path>>(trace: &Trace, out_path: P) -> Resu
     })?;
 
     // Determine baseline timestamp (microseconds)
-    let min_ts_ns = trace
-        .events
-        .iter()
-        .map(|e| e.start_ns)
-        .chain(trace.samples().map(|s| s.timestamp_ns))
-        .min()
-        .unwrap_or(0);
+    let min_ts_ns = trace.time_bounds().map_or(0, |(min, _)| min);
 
     let mut trace_events = Vec::new();
 
-    // 1. Regions and Kernels as Complete Events (type 'X')
-    for e in &trace.events {
+    // 1. Regions and Kernels as Complete Events (type 'X'), one track per nesting depth
+    let depths = trace.event_depths();
+    for (e, depth) in trace.events.iter().zip(depths) {
         let ts_us = (e.start_ns.saturating_sub(min_ts_ns)) as f64 / 1_000.0;
         let dur_us = e.duration_ns() as f64 / 1_000.0;
 
@@ -41,7 +36,7 @@ pub fn export_perfetto_trace<P: AsRef<Path>>(trace: &Trace, out_path: P) -> Resu
             "ts": ts_us,
             "dur": dur_us,
             "pid": 1,
-            "tid": e.parent_id,
+            "tid": depth,
             "args": {
                 "id": e.id,
                 "parent_id": e.parent_id
@@ -76,4 +71,40 @@ pub fn export_perfetto_trace<P: AsRef<Path>>(trace: &Trace, out_path: P) -> Resu
     file.flush()?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::{Event, RegionCategory};
+
+    fn event(id: u64, parent_id: u64, start_ns: u64, end_ns: u64) -> Event {
+        Event {
+            id,
+            parent_id,
+            name: format!("e{id}"),
+            category: RegionCategory::UserRegion,
+            start_ns,
+            end_ns,
+        }
+    }
+
+    #[test]
+    fn test_tracks_follow_nesting_depth() {
+        // Two siblings under the same root must share a track
+        let events = vec![event(1, 0, 0, 10), event(2, 1, 1, 4), event(3, 1, 5, 9)];
+        let trace = Trace::new(None, events, Vec::new());
+        let file = tempfile::NamedTempFile::new().unwrap();
+        export_perfetto_trace(&trace, file.path()).unwrap();
+
+        let json: serde_json::Value =
+            serde_json::from_reader(File::open(file.path()).unwrap()).unwrap();
+        let tids: Vec<u64> = json["traceEvents"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|e| e["tid"].as_u64().unwrap())
+            .collect();
+        assert_eq!(tids, vec![0, 1, 1]);
+    }
 }
