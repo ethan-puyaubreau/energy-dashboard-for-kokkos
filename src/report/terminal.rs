@@ -25,9 +25,10 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
         Cell::new("Category").fg(Color::Cyan),
         Cell::new("Calls").fg(Color::Cyan),
         Cell::new("Duration (s)").fg(Color::Cyan),
-        Cell::new("Energy (J)").fg(Color::Cyan),
+        Cell::new("Energy Incl (J)").fg(Color::Cyan),
+        Cell::new("Energy Self (J)").fg(Color::Cyan),
         Cell::new("Avg Power (W)").fg(Color::Cyan),
-        Cell::new("% Energy").fg(Color::Cyan),
+        Cell::new("% Self").fg(Color::Cyan),
     ]);
 
     for r in &analysis.regions {
@@ -37,6 +38,7 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
             Cell::new(r.call_count.to_string()),
             Cell::new(format!("{:.3}", r.total_duration_sec)),
             Cell::new(format!("{:.2}", r.inclusive_energy_joules)),
+            Cell::new(format!("{:.2}", r.exclusive_energy_joules)),
             Cell::new(format!("{:.1}", r.avg_power_watts)),
             Cell::new(format!("{:.1}%", r.energy_percentage)),
         ]));
@@ -59,6 +61,7 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
         Cell::new("-"),
         Cell::new(format!("{:.3}", analysis.idle_duration_sec)),
         Cell::new(format!("{:.2}", analysis.idle_energy_joules)),
+        Cell::new(format!("{:.2}", analysis.idle_energy_joules)),
         Cell::new(format!("{:.1}", idle_power)),
         Cell::new(format!("{:.1}%", idle_pct)),
     ]));
@@ -69,6 +72,7 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
         Cell::new("-"),
         Cell::new("-"),
         Cell::new(format!("{:.3}", analysis.total_trace_duration_sec)).fg(Color::Yellow),
+        Cell::new(format!("{:.2}", analysis.total_trace_energy_joules)).fg(Color::Yellow),
         Cell::new(format!("{:.2}", analysis.total_trace_energy_joules)).fg(Color::Yellow),
         Cell::new(format!("{:.1}", analysis.avg_trace_power_watts)).fg(Color::Yellow),
         Cell::new("100.0%").fg(Color::Yellow),

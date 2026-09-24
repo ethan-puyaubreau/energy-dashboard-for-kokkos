@@ -37,7 +37,7 @@ pub fn export_html_report<P: AsRef<Path>>(
     let region_energies: Vec<f64> = analysis
         .regions
         .iter()
-        .map(|r| r.inclusive_energy_joules)
+        .map(|r| r.exclusive_energy_joules)
         .collect();
 
     let app_name = trace
@@ -167,7 +167,7 @@ pub fn export_html_report<P: AsRef<Path>>(
     }};
 
     const barLayout = {{
-      title: {{ text: 'Energy Attribution by Block (Joules)', font: {{ color: '#f8fafc' }} }},
+      title: {{ text: 'Exclusive Energy by Block (Joules)', font: {{ color: '#f8fafc' }} }},
       paper_bgcolor: 'transparent',
       plot_bgcolor: 'transparent',
       xaxis: {{ color: '#94a3b8', gridcolor: '#334155' }},
