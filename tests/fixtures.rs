@@ -35,6 +35,14 @@ fn synthetic_run_energy_per_region() {
 }
 
 #[test]
+fn multi_domain_series_are_integrated_separately() {
+    let analysis = analyze_fixture("multi_domain_run");
+
+    // GPU holds 100 W and CPU holds 50 W during 2 seconds
+    assert_close(region(&analysis, "Step").total_energy_joules, 300.0);
+}
+
+#[test]
 fn real_rtx3080ti_trace_is_consistent() {
     let analysis = analyze_fixture("real_rtx3080ti_trace");
 

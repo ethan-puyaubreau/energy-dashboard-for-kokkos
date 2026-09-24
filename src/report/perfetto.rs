@@ -23,7 +23,7 @@ pub fn export_perfetto_trace<P: AsRef<Path>>(trace: &Trace, out_path: P) -> Resu
         .events
         .iter()
         .map(|e| e.start_ns)
-        .chain(trace.samples.iter().map(|s| s.timestamp_ns))
+        .chain(trace.samples().map(|s| s.timestamp_ns))
         .min()
         .unwrap_or(0);
 
@@ -50,7 +50,7 @@ pub fn export_perfetto_trace<P: AsRef<Path>>(trace: &Trace, out_path: P) -> Resu
     }
 
     // 2. Power samples as Counter Events (type 'C')
-    for s in &trace.samples {
+    for s in trace.samples() {
         let ts_us = (s.timestamp_ns.saturating_sub(min_ts_ns)) as f64 / 1_000.0;
         let counter_name = format!("{}_{}_power_watts", s.domain, s.device_id);
 

@@ -36,3 +36,11 @@ pub struct PowerSample {
     #[serde(default)]
     pub energy_joules: Option<f64>,
 }
+
+/// Time-ordered power samples of a single device.
+#[derive(Debug, Clone)]
+pub struct PowerSeries {
+    pub domain: DeviceDomain,
+    pub device_id: u32,
+    pub samples: Vec<PowerSample>,
+}

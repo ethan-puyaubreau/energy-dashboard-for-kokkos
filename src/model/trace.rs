@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::event::Event;
-use super::sample::PowerSample;
+use super::sample::{PowerSample, PowerSeries};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Metadata {
@@ -17,7 +17,8 @@ pub struct Metadata {
 pub struct Trace {
     pub metadata: Option<Metadata>,
     pub events: Vec<Event>,
-    pub samples: Vec<PowerSample>,
+    /// One time-ordered series per (domain, device_id), in order of appearance.
+    pub series: Vec<PowerSeries>,
 }
 
 impl Trace {
@@ -28,10 +29,31 @@ impl Trace {
     ) -> Self {
         events.sort_by_key(|e| e.start_ns);
         samples.sort_by_key(|s| s.timestamp_ns);
+
+        let mut series: Vec<PowerSeries> = Vec::new();
+        for sample in samples {
+            let index = series
+                .iter()
+                .position(|s| s.domain == sample.domain && s.device_id == sample.device_id);
+            match index {
+                Some(i) => series[i].samples.push(sample),
+                None => series.push(PowerSeries {
+                    domain: sample.domain,
+                    device_id: sample.device_id,
+                    samples: vec![sample],
+                }),
+            }
+        }
+
         Self {
             metadata,
             events,
-            samples,
+            series,
         }
+    }
+
+    /// Iterate over every power sample of every series.
+    pub fn samples(&self) -> impl Iterator<Item = &PowerSample> {
+        self.series.iter().flat_map(|s| s.samples.iter())
     }
 }
