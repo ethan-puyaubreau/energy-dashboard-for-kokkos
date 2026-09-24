@@ -1,5 +1,7 @@
 # energy-dashboard-for-kokkos
 
+[![CI](https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos/actions/workflows/ci.yml/badge.svg)](https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos/actions/workflows/ci.yml)
+
 Attributes measured GPU energy to the regions and kernels of a Kokkos application.
 
 `energy-dashboard-for-kokkos` provides attribution of electrical energy (Joules) and average power (Watts) to Kokkos execution blocks (`UserRegion`, `parallel_for`, `parallel_reduce`, `parallel_scan`, and memory movements).
@@ -88,6 +90,11 @@ g++ -std=c++20 -O3 -fPIC -shared kp_energy_profiler.cpp \
     -I/usr/local/cuda/include -L/usr/lib/x86_64-linux-gnu -lnvidia-ml -lpthread \
     -o libkokkos_energy.so
 ```
+
+The upstream pull requests ([#299](https://github.com/kokkos/kokkos-tools/pull/299),
+[#301](https://github.com/kokkos/kokkos-tools/pull/301)) carry the 2025 connector. This v1
+connector writes the trace format described in [DATA_SPEC.md](DATA_SPEC.md) and lives on the
+fork branch until those are merged.
 
 Traces written by the 2025 version of the connector, such as the ones published with the
 [SMC 2025 poster](https://github.com/ethan-puyaubreau/smc2025-gpu-energy-poster#data-and-reproduction),
@@ -219,3 +226,10 @@ See [DATA_SPEC.md](DATA_SPEC.md) for complete details on the underlying `events.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, conventions and
 release process.
+
+## Citing
+
+If this tool supports published work, please cite it with the metadata in
+[CITATION.cff](CITATION.cff) (GitHub shows it under "Cite this repository"). The
+measurement limits and the DBSCAN case study are described in the
+[SMC 2025 poster](https://ethan-puyaubreau.github.io/smc2025-gpu-energy-poster/).

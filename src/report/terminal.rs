@@ -16,12 +16,19 @@ pub fn sampling_note(analysis: &TraceAnalysis) -> Option<String> {
         return None;
     }
 
+    let limit = if resolution > period {
+        format!(
+            "{:.0} ms (sampling every {:.1} ms, NVML refresh about 100 ms)",
+            resolution * 1_000.0,
+            period * 1_000.0
+        )
+    } else {
+        format!("the {:.1} ms sampling period", period * 1_000.0)
+    };
     Some(format!(
-        "{:.1}% of events are shorter than {:.0} ms (sampling every {:.1} ms, NVML refresh \
-         about 100 ms), their power is interpolated between readings rather than measured.",
-        analysis.short_event_fraction * 100.0,
-        resolution * 1_000.0,
-        period * 1_000.0
+        "{:.1}% of events are shorter than {limit}, their power is interpolated between \
+         readings rather than measured.",
+        analysis.short_event_fraction * 100.0
     ))
 }
 
@@ -113,4 +120,28 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
         println!("\n  Note: {note}");
     }
     println!();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn analysis(period: f64, resolution: f64) -> TraceAnalysis {
+        TraceAnalysis {
+            sampling_period_sec: Some(period),
+            resolution_sec: Some(resolution),
+            short_event_fraction: 0.5,
+            ..TraceAnalysis::default()
+        }
+    }
+
+    #[test]
+    fn note_names_nvml_only_when_it_sets_the_limit() {
+        let gpu = sampling_note(&analysis(0.02, 0.1)).unwrap();
+        assert!(gpu.contains("shorter than 100 ms (sampling every 20.0 ms, NVML refresh"));
+
+        let cpu = sampling_note(&analysis(0.02, 0.02)).unwrap();
+        assert!(cpu.contains("shorter than the 20.0 ms sampling period"));
+        assert!(!cpu.contains("NVML"));
+    }
 }

@@ -40,7 +40,7 @@ pub struct DeviceMetrics {
 }
 
 /// Global trace analysis result.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct TraceAnalysis {
     /// Duration of the whole measured window, events and samples included.
     pub total_trace_duration_sec: f64,
@@ -158,7 +158,7 @@ fn covered_ns(trace: &Trace) -> u64 {
     covered + current.map_or(0, |(start, end)| end - start)
 }
 
-/// NVML refreshes its power reading about every 100 ms (Yang et al., 2023), so events
+/// NVML refreshes its power reading about every 100 ms (Yang, Adamek and Armour, SC24), so events
 /// shorter than that are not measured on their own, however fast the connector samples.
 const NVML_REFRESH_NS: u64 = 100_000_000;
 
