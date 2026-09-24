@@ -1,3 +1,5 @@
+//! Energy integration, attribution and instrumented application runner.
+
 pub mod attribution;
 pub mod integrate;
 pub mod runner;

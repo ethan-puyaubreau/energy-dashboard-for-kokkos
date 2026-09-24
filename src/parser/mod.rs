@@ -1,3 +1,5 @@
+//! Loading of trace directories written by the energy connector.
+
 pub mod events_csv;
 pub mod power_csv;
 

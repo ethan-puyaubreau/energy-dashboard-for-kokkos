@@ -1,3 +1,5 @@
+//! Complete trace combining events, power series and metadata.
+
 use serde::{Deserialize, Serialize};
 use std::cmp::Reverse;
 use std::collections::HashMap;
@@ -5,25 +7,34 @@ use std::collections::HashMap;
 use super::event::Event;
 use super::sample::{PowerSample, PowerSeries};
 
+/// Experiment and host description read from `metadata.json`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Metadata {
+    /// Version of the trace format specification.
     pub spec_version: String,
+    /// Executable name of the profiled application.
     pub app_name: Option<String>,
+    /// Host the application ran on.
     pub hostname: Option<String>,
+    /// Kokkos execution backend, for instance `CUDA`.
     pub kokkos_backend: Option<String>,
+    /// Connector start timestamp in nanoseconds since UNIX epoch.
     pub start_epoch_ns: Option<u64>,
 }
 
 /// Unified trace data containing all events and telemetry samples.
 #[derive(Debug, Clone)]
 pub struct Trace {
+    /// Optional experiment metadata.
     pub metadata: Option<Metadata>,
+    /// Events sorted by start timestamp, parents before children.
     pub events: Vec<Event>,
     /// One time-ordered series per (domain, device_id), in order of appearance.
     pub series: Vec<PowerSeries>,
 }
 
 impl Trace {
+    /// Build a trace, sorting events and grouping samples into per-device series.
     pub fn new(
         metadata: Option<Metadata>,
         mut events: Vec<Event>,

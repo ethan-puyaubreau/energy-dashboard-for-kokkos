@@ -1,3 +1,5 @@
+//! Chrome Tracing JSON export for Perfetto.
+
 use anyhow::{Context, Result};
 use serde_json::json;
 use std::fs::File;
@@ -39,7 +41,7 @@ fn assign_tracks(events: &[Event]) -> Vec<usize> {
 
 /// Export the trace to Chrome Tracing / Perfetto JSON format.
 ///
-/// Can be loaded directly into https://ui.perfetto.dev or chrome://tracing.
+/// Can be loaded directly into <https://ui.perfetto.dev> or `chrome://tracing`.
 pub fn export_perfetto_trace<P: AsRef<Path>>(trace: &Trace, out_path: P) -> Result<()> {
     let out_path = out_path.as_ref();
     let mut file = File::create(out_path).with_context(|| {

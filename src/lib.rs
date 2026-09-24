@@ -1,3 +1,11 @@
+//! Energy attribution for Kokkos applications.
+//!
+//! Loads the traces written by the KokkosP energy connector, integrates the measured
+//! power over each Kokkos region and kernel, and renders terminal, Perfetto and HTML
+//! reports.
+
+#![warn(missing_docs)]
+
 pub mod engine;
 pub mod model;
 pub mod parser;

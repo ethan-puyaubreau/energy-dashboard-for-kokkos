@@ -1,3 +1,5 @@
+//! Standalone HTML dashboard export.
+
 use anyhow::{Context, Result};
 use serde_json::json;
 use std::fs::File;

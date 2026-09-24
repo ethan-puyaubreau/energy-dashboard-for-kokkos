@@ -1,3 +1,5 @@
+//! Parser for `events.csv`.
+
 use crate::model::Event;
 use anyhow::{Context, Result};
 use std::fs::File;

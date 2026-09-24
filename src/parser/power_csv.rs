@@ -1,3 +1,5 @@
+//! Parser for `power_samples.csv`.
+
 use crate::model::PowerSample;
 use anyhow::{Context, Result};
 use std::fs::File;
