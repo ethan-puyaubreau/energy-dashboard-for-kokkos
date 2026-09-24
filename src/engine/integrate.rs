@@ -2,6 +2,8 @@ use crate::model::PowerSample;
 
 /// Integrate power over time using the composite trapezoidal rule.
 ///
+/// `samples` must be sorted by timestamp.
+///
 /// Returns energy in Joules between `start_ns` and `end_ns`.
 /// If hardware cumulative energy counters are present in the boundary samples,
 /// the exact difference is returned.
@@ -10,16 +12,15 @@ pub fn integrate_energy_joules(samples: &[PowerSample], start_ns: u64, end_ns: u
         return 0.0;
     }
 
-    // Filter samples within the interval
-    let window: Vec<&PowerSample> = samples
-        .iter()
-        .filter(|s| s.timestamp_ns >= start_ns && s.timestamp_ns <= end_ns)
-        .collect();
+    // Samples are sorted by timestamp, locate the window by binary search
+    let lo = samples.partition_point(|s| s.timestamp_ns < start_ns);
+    let hi = samples.partition_point(|s| s.timestamp_ns <= end_ns);
+    let window = &samples[lo..hi];
 
     if window.is_empty() {
         // Approximate using nearest surrounding samples if available
-        let before = samples.iter().rfind(|s| s.timestamp_ns < start_ns);
-        let after = samples.iter().find(|s| s.timestamp_ns > end_ns);
+        let before = lo.checked_sub(1).map(|i| &samples[i]);
+        let after = samples.get(hi);
 
         let power = match (before, after) {
             (Some(b), Some(a)) => (b.power_watts + a.power_watts) / 2.0,
@@ -53,8 +54,8 @@ pub fn integrate_energy_joules(samples: &[PowerSample], start_ns: u64, end_ns: u
 
     // Main window segments
     for i in 0..window.len().saturating_sub(1) {
-        let s0 = window[i];
-        let s1 = window[i + 1];
+        let s0 = &window[i];
+        let s1 = &window[i + 1];
         let dt_sec = (s1.timestamp_ns - s0.timestamp_ns) as f64 / 1_000_000_000.0;
         let avg_power = (s0.power_watts + s1.power_watts) / 2.0;
         total_joules += avg_power * dt_sec;
