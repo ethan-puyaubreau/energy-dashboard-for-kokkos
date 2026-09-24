@@ -18,6 +18,44 @@ High-performance energy analysis and profiling tool for Kokkos applications.
 
 ---
 
+## Requirements
+
+Energy is measured on **NVIDIA GPUs only**. CPU packages, DRAM and other
+accelerators are not sampled by the connector.
+
+### Analysis tool (`kokkos-energy`)
+
+- Prebuilt release binary: Linux x86_64, statically linked, no runtime dependency.
+- Build from source: Rust 1.85 or newer. The `analyze` command runs on any platform
+  supported by Rust, the `run` command needs a platform where the connector runs.
+
+### Profiling connector (`libkokkos_energy.so`)
+
+- Linux x86_64, native or WSL2.
+- NVIDIA driver providing NVML (`libnvidia-ml.so`, installed with the driver). Power
+  readings do not require root privileges.
+- CUDA toolkit headers for `nvml.h`, by default in `/usr/local/cuda/include`.
+- GCC 10 or newer, or any compiler supporting `-std=c++20`.
+- Kokkos built with Kokkos Tools support, which is enabled by default.
+
+### Benchmark application (optional)
+
+- CMake 3.16 or newer.
+- Kokkos installed with the CUDA backend (`Kokkos_ENABLE_CUDA=ON`) and the
+  `Kokkos_ARCH_*` option matching the GPU.
+- On WSL2, the WSL-Ubuntu CUDA toolkit, not the generic Linux one which ships its own
+  driver.
+
+### Tested configuration
+
+| Component | Version |
+| :--- | :--- |
+| GPU | NVIDIA GeForce RTX 3080 Ti (Ampere) |
+| System | Ubuntu on WSL2 |
+| Kokkos | 5.2.2, CUDA backend |
+
+---
+
 ## Quick Start
 
 ### 1. Build from source
