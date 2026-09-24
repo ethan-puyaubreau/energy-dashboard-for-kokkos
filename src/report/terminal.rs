@@ -1,3 +1,5 @@
+//! Summary table printed to standard output.
+
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{Cell, Color, Row, Table};
 

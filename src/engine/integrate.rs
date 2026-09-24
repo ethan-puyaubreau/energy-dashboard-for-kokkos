@@ -1,3 +1,5 @@
+//! Numerical integration of sampled power over time.
+
 use crate::model::PowerSample;
 
 /// Number of nanoseconds in one second.

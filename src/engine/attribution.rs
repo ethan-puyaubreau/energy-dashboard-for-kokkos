@@ -1,3 +1,5 @@
+//! Attribution of the measured energy to Kokkos regions and kernels.
+
 use super::integrate::integrate_energy_joules;
 use crate::model::{DeviceDomain, RegionCategory, Trace};
 use std::cmp::Reverse;
@@ -6,9 +8,13 @@ use std::collections::HashMap;
 /// Aggregated metrics for a family of events with the same name and category.
 #[derive(Debug, Clone)]
 pub struct RegionMetrics {
+    /// Region or kernel label.
     pub name: String,
+    /// Kokkos category shared by every event of the family.
     pub category: RegionCategory,
+    /// Number of events in the family.
     pub call_count: usize,
+    /// Summed wall time of every event, in seconds.
     pub total_duration_sec: f64,
     /// Energy spent while the region was active, children included.
     pub inclusive_energy_joules: f64,
@@ -23,9 +29,13 @@ pub struct RegionMetrics {
 /// Energy of a single power series over the whole trace window.
 #[derive(Debug, Clone)]
 pub struct DeviceMetrics {
+    /// Measured hardware domain.
     pub domain: DeviceDomain,
+    /// Device index within the domain.
     pub device_id: u32,
+    /// Energy over the whole trace window, in Joules.
     pub energy_joules: f64,
+    /// Energy divided by the trace window duration, in Watts.
     pub avg_power_watts: f64,
 }
 
@@ -34,7 +44,9 @@ pub struct DeviceMetrics {
 pub struct TraceAnalysis {
     /// Duration of the whole measured window, events and samples included.
     pub total_trace_duration_sec: f64,
+    /// Energy of the whole measured window, summed over every device.
     pub total_trace_energy_joules: f64,
+    /// Total energy divided by the window duration.
     pub avg_trace_power_watts: f64,
     /// Time of the window not covered by any event.
     pub idle_duration_sec: f64,
@@ -48,6 +60,7 @@ pub struct TraceAnalysis {
     ///
     /// The power of such events is interpolated between samples, not measured.
     pub short_event_fraction: f64,
+    /// Per-region metrics sorted by inclusive energy, highest first.
     pub regions: Vec<RegionMetrics>,
 }
 

@@ -1,3 +1,5 @@
+//! Launch of an application instrumented with the energy connector.
+
 use anyhow::{Context, Result};
 use std::fs;
 use std::path::Path;

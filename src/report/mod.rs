@@ -1,3 +1,5 @@
+//! Terminal, Perfetto and HTML renderings of an analyzed trace.
+
 pub mod html;
 pub mod perfetto;
 pub mod terminal;
