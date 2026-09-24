@@ -100,10 +100,9 @@ impl Trace {
                 current = parents[c];
             }
 
-            let mut depth = current.and_then(|c| depths[c]).map_or(0, |d| d + 1);
-            for &c in chain.iter().rev() {
+            let base = current.and_then(|c| depths[c]).map_or(0, |d| d + 1);
+            for (depth, &c) in (base..).zip(chain.iter().rev()) {
                 depths[c] = Some(depth);
-                depth += 1;
             }
         }
 
