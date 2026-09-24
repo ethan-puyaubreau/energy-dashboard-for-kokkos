@@ -8,17 +8,19 @@ use crate::model::Trace;
 
 /// Describe how many events are too short to be measured by the power sampler.
 ///
-/// Returns `None` when every event spans at least one sampling period.
+/// Returns `None` when every event lasts at least as long as the power readings resolve.
 pub fn sampling_note(analysis: &TraceAnalysis) -> Option<String> {
     let period = analysis.sampling_period_sec?;
+    let resolution = analysis.resolution_sec?;
     if analysis.short_event_fraction <= 0.0 {
         return None;
     }
 
     Some(format!(
-        "{:.1}% of events are shorter than the {:.1} ms sampling period, \
-         their power is interpolated between samples rather than measured.",
+        "{:.1}% of events are shorter than {:.0} ms (sampling every {:.1} ms, NVML refresh \
+         about 100 ms), their power is interpolated between readings rather than measured.",
         analysis.short_event_fraction * 100.0,
+        resolution * 1_000.0,
         period * 1_000.0
     ))
 }

@@ -139,7 +139,7 @@ Output example (rows below 0.1% trimmed):
 └─────────────────────────────────────────────┴─────────────────┴───────┴──────────────┴─────────────────┴─────────────────┴───────────────┴────────┘
   GPU 0: 2158.32 J, 215.5 W avg
 
-  Note: 100.0% of events are shorter than the 20.4 ms sampling period, their power is interpolated between samples rather than measured.
+  Note: 100.0% of events are shorter than 100 ms (sampling every 20.4 ms, NVML refresh about 100 ms), their power is interpolated between readings rather than measured.
 ```
 
 ---
@@ -154,8 +154,9 @@ Output example (rows below 0.1% trimmed):
 - **Avg Power** is the inclusive energy divided by the block duration.
 - The lines under the table give the energy of each measured device. The table
   sums all of them.
-- A final note appears when events are shorter than the sampling period, with the
-  share of such events. See Limits below.
+- A final note appears when events are shorter than the power readings resolve (the
+  sampling period or the NVML refresh, whichever is longer), with the share of such
+  events. See Limits below.
 
 ### Attribution Rules
 
@@ -185,7 +186,7 @@ report the same device energy: do not sum device or total energies across ranks.
   between samples, and summing many launches only helps when they do not recur at
   the same phase as the sensor window. Regions much longer than the refresh interval,
   such as a solver phase or a whole algorithm, are measured reliably. The report
-  prints the share of short events so this is never silent.
+  prints the share of events shorter than about 100 ms so this is never silent.
 - Overlapping blocks share energy equally because a device reports a single power
   value. With the default Kokkos global fencing, kernels do not overlap and this
   rule never applies.

@@ -56,9 +56,12 @@ pub struct TraceAnalysis {
     pub devices: Vec<DeviceMetrics>,
     /// Median interval between two samples of a series, if at least two samples exist.
     pub sampling_period_sec: Option<f64>,
-    /// Fraction of events shorter than the sampling period, in [0, 1].
+    /// Shortest duration the power readings resolve: the sampling period, or the NVML
+    /// refresh interval when that is longer.
+    pub resolution_sec: Option<f64>,
+    /// Fraction of events shorter than `resolution_sec`, in [0, 1].
     ///
-    /// The power of such events is interpolated between samples, not measured.
+    /// The power of such events is interpolated between readings, not measured.
     pub short_event_fraction: f64,
     /// Per-region metrics sorted by inclusive energy, highest first.
     pub regions: Vec<RegionMetrics>,
@@ -156,6 +159,10 @@ fn covered_ns(trace: &Trace) -> u64 {
 }
 
 /// Median interval in nanoseconds between consecutive samples of the same series.
+/// NVML refreshes its power reading about every 100 ms (Yang et al., 2023), so events
+/// shorter than that are not measured on their own, however fast the connector samples.
+const NVML_REFRESH_NS: u64 = 100_000_000;
+
 fn median_sampling_period_ns(trace: &Trace) -> Option<u64> {
     let mut intervals: Vec<u64> = trace
         .series
@@ -220,11 +227,12 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
         (max_end - min_start).saturating_sub(covered_ns(trace)) as f64 / 1_000_000_000.0;
 
     let sampling_period_ns = median_sampling_period_ns(trace);
-    let short_events = sampling_period_ns.map_or(0, |period| {
+    let resolution_ns = sampling_period_ns.map(|period| period.max(NVML_REFRESH_NS));
+    let short_events = resolution_ns.map_or(0, |resolution| {
         trace
             .events
             .iter()
-            .filter(|e| e.duration_ns() < period)
+            .filter(|e| e.duration_ns() < resolution)
             .count()
     });
     let short_event_fraction = if trace.events.is_empty() {
@@ -299,6 +307,7 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
         idle_energy_joules,
         devices,
         sampling_period_sec: sampling_period_ns.map(|ns| ns as f64 / 1_000_000_000.0),
+        resolution_sec: resolution_ns.map(|ns| ns as f64 / 1_000_000_000.0),
         short_event_fraction,
         regions,
     }
@@ -368,7 +377,34 @@ mod tests {
         let analysis = analyze_trace(&Trace::new(None, events, constant_power(2)));
 
         assert_eq!(analysis.sampling_period_sec, Some(1.0));
+        assert_eq!(analysis.resolution_sec, Some(1.0));
         assert!((analysis.short_event_fraction - 0.5).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_events_shorter_than_nvml_refresh_are_counted() {
+        // Sampled every 20 ms: a 50 ms event spans two samples but is still shorter
+        // than the ~100 ms NVML refresh, so its power is not measured on its own.
+        let ms = 1_000_000;
+        let samples = (0..=10)
+            .map(|i| PowerSample {
+                timestamp_ns: i * 20 * ms,
+                domain: DeviceDomain::Gpu,
+                device_id: 0,
+                power_watts: 100.0,
+                energy_joules: None,
+            })
+            .collect();
+        let events = vec![Event {
+            start_ns: 0,
+            end_ns: 50 * ms,
+            ..event(1, 0, "Kernel", 0, 0)
+        }];
+        let analysis = analyze_trace(&Trace::new(None, events, samples));
+
+        assert_eq!(analysis.sampling_period_sec, Some(0.02));
+        assert_eq!(analysis.resolution_sec, Some(0.1));
+        assert!((analysis.short_event_fraction - 1.0).abs() < 1e-9);
     }
 
     #[test]
