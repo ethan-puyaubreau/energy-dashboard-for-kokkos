@@ -2,7 +2,7 @@
 name = "kokkos-energy"
 version = "0.2.0"
 edition = "2021"
-rust-version = "1.85"
+rust-version = "1.88"
 authors = ["Ethan Puyaubreau <ethan.puyaubreau@gmail.com>"]
 description = "HPC energy analysis and profiling tool for Kokkos applications"
 license = "Apache-2.0"

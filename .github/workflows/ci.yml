@@ -43,8 +43,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Rust 1.85
-        uses: dtolnay/rust-toolchain@1.85
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@1.88
 
       - name: Build with locked dependencies
         run: cargo build --locked

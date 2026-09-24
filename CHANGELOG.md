@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The HTML report plots one power curve per device.
 - Perfetto keeps nested blocks on one track and moves overlapping ones to extra tracks.
 - `run` forwards the exit code of the application.
-- Minimum supported Rust version is 1.85.
+- Minimum supported Rust version is 1.88.
 
 ### Removed
 
