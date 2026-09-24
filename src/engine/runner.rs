@@ -6,12 +6,15 @@ use tempfile::tempdir;
 use crate::analyze_and_report;
 
 /// Run a command instrumented with the Kokkos energy connector library.
+///
+/// Returns the exit code of the application so that batch jobs see its failures.
+/// The trace of a failed application is still analyzed when it can be loaded.
 pub fn run_instrumented_command(
     lib_path: &Path,
     app_args: &[String],
     perfetto: Option<&Path>,
     report_html: Option<&Path>,
-) -> Result<()> {
+) -> Result<i32> {
     if app_args.is_empty() {
         anyhow::bail!(
             "No command specified to run. Usage: kokkos-energy run --lib <LIB> -- <APP> [ARGS...]"
@@ -46,6 +49,28 @@ pub fn run_instrumented_command(
         );
     }
 
+    // A process killed by a signal has no exit code
+    let code = status.code().unwrap_or(1);
+
     println!("\n  [kokkos-energy] Application finished. Analyzing trace...");
-    analyze_and_report(trace_path, perfetto, report_html)
+    match analyze_and_report(trace_path, perfetto, report_html) {
+        Ok(()) => Ok(code),
+        Err(err) if code != 0 => {
+            eprintln!("  [kokkos-energy] Could not analyze trace: {err:#}");
+            Ok(code)
+        }
+        Err(err) => Err(err),
+    }
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_application_exit_code_is_returned() {
+        let app = ["sh", "-c", "exit 3"].map(String::from);
+        let code = run_instrumented_command(Path::new("unused.so"), &app, None, None).unwrap();
+        assert_eq!(code, 3);
+    }
 }

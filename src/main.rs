@@ -67,12 +67,15 @@ fn main() -> Result<()> {
             report,
             app_command,
         } => {
-            engine::run_instrumented_command(
+            let code = engine::run_instrumented_command(
                 &lib,
                 &app_command,
                 perfetto.as_deref(),
                 report.as_deref(),
             )?;
+            if code != 0 {
+                std::process::exit(code);
+            }
         }
     }
 
