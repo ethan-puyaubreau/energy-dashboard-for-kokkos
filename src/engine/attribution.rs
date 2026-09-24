@@ -346,7 +346,6 @@ mod tests {
                 domain: DeviceDomain::Gpu,
                 device_id: 0,
                 power_watts: 100.0,
-                energy_joules: None,
             })
             .collect()
     }
@@ -400,7 +399,6 @@ mod tests {
                 domain: DeviceDomain::Gpu,
                 device_id: 0,
                 power_watts: 100.0,
-                energy_joules: None,
             })
             .collect();
         let events = vec![Event {
@@ -428,7 +426,6 @@ mod tests {
                     domain: DeviceDomain::CpuPkg,
                     device_id: 0,
                     power_watts: 50.0,
-                    energy_joules: None,
                 })
                 .collect(),
         );

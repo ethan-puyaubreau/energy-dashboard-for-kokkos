@@ -238,7 +238,9 @@ mod tests {
             app_name: Some("<b>app</b>".to_string()),
             hostname: None,
             kokkos_backend: None,
+            device_count: None,
             start_epoch_ns: None,
+            mpi_rank: None,
         };
         let event = Event {
             id: 1,
@@ -253,7 +255,6 @@ mod tests {
             domain: DeviceDomain::Gpu,
             device_id: 0,
             power_watts: 100.0,
-            energy_joules: None,
         };
         let trace = Trace::new(Some(metadata), vec![event], vec![sample]);
         let file = tempfile::NamedTempFile::new().unwrap();

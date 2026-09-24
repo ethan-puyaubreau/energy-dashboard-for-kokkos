@@ -1,6 +1,6 @@
-timestamp_ns,domain,device_id,power_watts,energy_joules
-0,GPU,0,100.0,
-500000000,CPU_PKG,0,50.0,
-1000000000,GPU,0,100.0,
-1500000000,CPU_PKG,0,50.0,
-2000000000,GPU,0,100.0,
+timestamp_ns,domain,device_id,power_watts
+0,GPU,0,100.0
+500000000,CPU_PKG,0,50.0
+1000000000,GPU,0,100.0
+1500000000,CPU_PKG,0,50.0
+2000000000,GPU,0,100.0

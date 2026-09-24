@@ -10,6 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Zenodo DOI (10.5281/zenodo.22943410, all versions) in the README and `CITATION.cff`.
+- `device_count` and `mpi_rank`, written by the connector in `metadata.json`, are part of
+  the trace format and read into the metadata.
+
+### Changed
+
+- The connector is no longer copied under `connector/`: the kokkos-tools fork
+  (`profiling/energy-profiler`) is its only source, and CI builds a pinned commit of it.
+  The library is now `libkp_energy_profiler.so`.
+
+### Removed
+
+- The `energy_joules` column of `power_samples.csv`. Traces that still carry it are read
+  as before, the column was already ignored.
 
 ## [0.3.0] - 2026-09-24
 

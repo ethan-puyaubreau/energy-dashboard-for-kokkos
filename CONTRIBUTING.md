@@ -12,8 +12,8 @@ attributed.
 - **NVIDIA GPUs only.** Other devices are out of scope for now. The trace format
   already accepts other domains, but no connector samples them.
 - **Sampled power is the only reference.** The NVML cumulative energy counter gave
-  unreliable measurements in practice. The `energy_joules` column is parsed but
-  ignored on purpose, please do not reintroduce it.
+  unreliable measurements in practice. The trace format has no energy counter
+  column on purpose, please do not reintroduce one.
 - **The connector lives elsewhere.** The KokkosP connector that writes the traces is
   maintained in the
   [`kokkos-tools` fork](https://github.com/ethan-puyaubreau/kokkos-tools/tree/feat/v1-energy-profiler).
