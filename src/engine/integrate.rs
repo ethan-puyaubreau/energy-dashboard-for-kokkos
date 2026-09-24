@@ -21,6 +21,23 @@ fn power_at(samples: &[PowerSample], t_ns: u64) -> f64 {
     s0.power_watts + frac * (s1.power_watts - s0.power_watts)
 }
 
+/// Linearly interpolate the cumulative energy counter at `t_ns`.
+///
+/// Returns `None` when `t_ns` is outside the sampled range or when a
+/// bracketing sample carries no counter value.
+fn energy_at(samples: &[PowerSample], t_ns: u64) -> Option<f64> {
+    let i = samples.partition_point(|s| s.timestamp_ns <= t_ns);
+    let s0 = &samples[i.checked_sub(1)?];
+    if s0.timestamp_ns == t_ns {
+        return s0.energy_joules;
+    }
+
+    let s1 = samples.get(i)?;
+    let (e0, e1) = (s0.energy_joules?, s1.energy_joules?);
+    let frac = (t_ns - s0.timestamp_ns) as f64 / (s1.timestamp_ns - s0.timestamp_ns) as f64;
+    Some(e0 + frac * (e1 - e0))
+}
+
 /// Energy in Joules of a linear power segment between two points.
 fn trapezoid(t0_ns: u64, p0: f64, t1_ns: u64, p1: f64) -> f64 {
     (p0 + p1) / 2.0 * (t1_ns - t0_ns) as f64 / NS_PER_SEC
@@ -33,22 +50,19 @@ fn trapezoid(t0_ns: u64, p0: f64, t1_ns: u64, p1: f64) -> f64 {
 /// `samples` must be sorted by timestamp.
 ///
 /// Returns energy in Joules between `start_ns` and `end_ns`.
-/// If hardware cumulative energy counters are present in the boundary samples,
-/// the exact difference is returned.
+/// If a hardware cumulative energy counter brackets both endpoints, the
+/// interpolated counter difference is returned instead. A decreasing counter
+/// (reset or wraparound) falls back to power integration.
 pub fn integrate_energy_joules(samples: &[PowerSample], start_ns: u64, end_ns: u64) -> f64 {
     if samples.is_empty() || start_ns >= end_ns {
         return 0.0;
     }
 
-    // If hardware cumulative energy is provided on first and last sample, use it
-    let lo = samples.partition_point(|s| s.timestamp_ns < start_ns);
-    let hi = samples.partition_point(|s| s.timestamp_ns <= end_ns);
-    let window = &samples[lo..hi];
-    if let (Some(first), Some(last)) = (window.first(), window.last()) {
-        if let (Some(e_start), Some(e_end)) = (first.energy_joules, last.energy_joules) {
-            if e_end >= e_start {
-                return e_end - e_start;
-            }
+    // Prefer the hardware cumulative counter when it brackets both endpoints
+    if let (Some(e_start), Some(e_end)) = (energy_at(samples, start_ns), energy_at(samples, end_ns))
+    {
+        if e_end >= e_start {
+            return e_end - e_start;
         }
     }
 
@@ -111,6 +125,28 @@ mod tests {
         // Power is 150 W at 0.5 s and 160 W at 0.6 s
         let samples = vec![gpu(0.0, 100.0), gpu(2.0, 300.0)];
         assert!((integrate(&samples, 0.5, 0.6) - 15.5).abs() < 1e-6);
+    }
+
+    /// Attach a cumulative energy counter value to a sample.
+    fn with_counter(mut sample: PowerSample, energy_joules: f64) -> PowerSample {
+        sample.energy_joules = Some(energy_joules);
+        sample
+    }
+
+    #[test]
+    fn test_counter_is_interpolated_at_boundaries() {
+        let samples = vec![
+            with_counter(gpu(0.0, 0.0), 0.0),
+            with_counter(gpu(1.0, 0.0), 100.0),
+            with_counter(gpu(2.0, 0.0), 300.0),
+        ];
+        assert!((integrate(&samples, 0.5, 1.5) - 150.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_partial_counter_falls_back_to_power() {
+        let samples = vec![gpu(0.0, 100.0), with_counter(gpu(1.0, 100.0), 500.0)];
+        assert!((integrate(&samples, 0.0, 1.0) - 100.0).abs() < 1e-6);
     }
 
     #[test]
