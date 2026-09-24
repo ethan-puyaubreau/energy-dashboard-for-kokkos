@@ -9,43 +9,40 @@ use std::path::{Path, PathBuf};
 pub use events_csv::parse_events_csv;
 pub use power_csv::parse_power_csv;
 
-/// Resolve the directory that holds the trace files.
+/// List the directories that hold trace files under `dir`.
 ///
-/// Under MPI or Slurm the connector writes into a `rank_<N>` subdirectory.
-/// A single rank subdirectory is used transparently, several are rejected.
-fn resolve_trace_dir(dir: &Path) -> Result<PathBuf> {
+/// Under MPI or Slurm the connector writes one `rank_<N>` subdirectory per rank.
+/// Rank directories are returned in rank order. When `dir` holds the trace files
+/// itself, or no rank directory is found, `dir` is returned alone.
+pub fn trace_dirs(dir: &Path) -> Vec<PathBuf> {
     if dir.join("events.csv").exists() {
-        return Ok(dir.to_path_buf());
+        return vec![dir.to_path_buf()];
     }
 
-    let ranks: Vec<PathBuf> = fs::read_dir(dir)
+    let mut ranks: Vec<(u64, PathBuf)> = fs::read_dir(dir)
         .into_iter()
         .flatten()
         .flatten()
         .map(|entry| entry.path())
-        .filter(|path| {
-            let is_rank = path
-                .file_name()
-                .and_then(|name| name.to_str())
-                .is_some_and(|name| name.starts_with("rank_"));
-            is_rank && path.join("events.csv").exists()
+        .filter(|path| path.join("events.csv").exists())
+        .filter_map(|path| {
+            let name = path.file_name()?.to_str()?;
+            let rank = name.strip_prefix("rank_")?.parse().ok()?;
+            Some((rank, path))
         })
         .collect();
+    ranks.sort();
 
-    match ranks.as_slice() {
-        [single] => Ok(single.clone()),
-        [] => Ok(dir.to_path_buf()),
-        _ => anyhow::bail!(
-            "Found {} rank directories in {}, analyze one rank directory at a time",
-            ranks.len(),
-            dir.display()
-        ),
+    if ranks.is_empty() {
+        vec![dir.to_path_buf()]
+    } else {
+        ranks.into_iter().map(|(_, path)| path).collect()
     }
 }
 
 /// Ingest an entire trace directory.
 pub fn load_trace_dir<P: AsRef<Path>>(dir: P) -> Result<Trace> {
-    let dir = resolve_trace_dir(dir.as_ref())?;
+    let dir = dir.as_ref();
     let events_path = dir.join("events.csv");
     let power_path = dir.join("power_samples.csv");
     let meta_path = dir.join("metadata.json");
@@ -79,16 +76,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_single_rank_subdirectory_is_resolved() {
+    fn test_rank_subdirectories_are_listed_in_rank_order() {
         let dir = tempfile::tempdir().unwrap();
-        let rank = dir.path().join("rank_0");
-        fs::create_dir(&rank).unwrap();
-        fs::write(rank.join("events.csv"), "").unwrap();
-        assert_eq!(resolve_trace_dir(dir.path()).unwrap(), rank);
+        for rank in ["rank_10", "rank_2", "other"] {
+            fs::create_dir(dir.path().join(rank)).unwrap();
+            fs::write(dir.path().join(rank).join("events.csv"), "").unwrap();
+        }
 
-        fs::create_dir(dir.path().join("rank_1")).unwrap();
-        fs::write(dir.path().join("rank_1").join("events.csv"), "").unwrap();
-        assert!(resolve_trace_dir(dir.path()).is_err());
+        let dirs = trace_dirs(dir.path());
+        assert_eq!(
+            dirs,
+            vec![dir.path().join("rank_2"), dir.path().join("rank_10")]
+        );
     }
 
     #[test]
