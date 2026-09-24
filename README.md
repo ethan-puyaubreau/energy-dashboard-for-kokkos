@@ -14,9 +14,9 @@ Attributes measured GPU energy to the regions and kernels of a Kokkos applicatio
 - **Single binary:** no daemon, no container, runs unprivileged on a compute node.
 - **Hierarchical attribution:** energy of each region and kernel, inclusive and exclusive, by trapezoidal integration of the power trace (see Limits for what that can and cannot resolve).
 - **Console report:** a summary table on stdout, readable in a Slurm job log.
-- **Perfetto / Chrome Tracing Export:** Generate interactive `trace.json` timelines viewable at [ui.perfetto.dev](https://ui.perfetto.dev).
-- **Standalone HTML Dashboard:** Export self-contained offline reports (`report.html`) with embedded interactive Plotly charts, usable on compute nodes without network access.
-- **Direct Runner Mode:** Transparently launch an application and profile it in a single command.
+- **Perfetto timeline:** an interactive `trace.json` for [ui.perfetto.dev](https://ui.perfetto.dev).
+- **HTML report:** a self-contained `report.html` with embedded Plotly charts, readable without network access.
+- **Run mode:** launch an application and profile it in one command.
 
 ---
 
@@ -174,8 +174,8 @@ Output example (rows below 0.1% trimmed):
 - Each power series (one per domain and device) is integrated on its own with the
   trapezoidal rule, then the series are summed.
 - Power is linearly interpolated at block boundaries.
-- Sampled power is the only reference. Hardware cumulative energy counters are
-  ignored: the analysis relies on sampled power only, so one method applies to every device.
+- Sampled power is the only reference, so one method applies to every device; hardware
+  cumulative energy counters are ignored.
 - Blocks that overlap without being nested, such as concurrent kernels, share the
   energy of the overlapping interval equally.
 
