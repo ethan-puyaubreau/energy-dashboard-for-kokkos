@@ -6,6 +6,9 @@ use std::path::Path;
 use crate::engine::TraceAnalysis;
 use crate::model::Trace;
 
+/// Plotly bundle embedded so the report renders without network access.
+const PLOTLY_JS: &str = include_str!("../../assets/plotly-2.35.2.min.js");
+
 /// Generate a standalone interactive HTML report using embedded Plotly.js.
 pub fn export_html_report<P: AsRef<Path>>(
     trace: &Trace,
@@ -62,7 +65,7 @@ pub fn export_html_report<P: AsRef<Path>>(
 <head>
   <meta charset="UTF-8">
   <title>Kokkos Energy Report - {app_name}</title>
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script>{plotly_js}</script>
   <style>
     body {{
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -180,6 +183,7 @@ pub fn export_html_report<P: AsRef<Path>>(
 </body>
 </html>
 "#,
+        plotly_js = PLOTLY_JS,
         app_name = app_name,
         hostname = hostname,
         total_energy = analysis.total_trace_energy_joules,
