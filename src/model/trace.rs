@@ -97,6 +97,15 @@ impl Trace {
         depths.into_iter().map(|d| d.unwrap_or(0)).collect()
     }
 
+    /// Earliest and latest timestamps over all events and power samples.
+    pub fn time_bounds(&self) -> Option<(u64, u64)> {
+        let min = self.events.iter().map(|e| e.start_ns);
+        let max = self.events.iter().map(|e| e.end_ns);
+        let min = min.chain(self.samples().map(|s| s.timestamp_ns)).min()?;
+        let max = max.chain(self.samples().map(|s| s.timestamp_ns)).max()?;
+        Some((min, max))
+    }
+
     /// Iterate over every power sample of every series.
     pub fn samples(&self) -> impl Iterator<Item = &PowerSample> {
         self.series.iter().flat_map(|s| s.samples.iter())

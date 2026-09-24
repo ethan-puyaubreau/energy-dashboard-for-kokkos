@@ -23,9 +23,14 @@ pub struct RegionMetrics {
 /// Global trace analysis result.
 #[derive(Debug, Clone)]
 pub struct TraceAnalysis {
+    /// Duration of the whole measured window, events and samples included.
     pub total_trace_duration_sec: f64,
     pub total_trace_energy_joules: f64,
     pub avg_trace_power_watts: f64,
+    /// Time of the window not covered by any event.
+    pub idle_duration_sec: f64,
+    /// Energy of the window not attributed to any event.
+    pub idle_energy_joules: f64,
     pub regions: Vec<RegionMetrics>,
 }
 
@@ -100,20 +105,30 @@ fn exclusive_energies(trace: &Trace, parents: &[Option<usize>]) -> Vec<f64> {
     exclusive
 }
 
+/// Total time in nanoseconds covered by at least one event.
+///
+/// `trace.events` is sorted by start timestamp.
+fn covered_ns(trace: &Trace) -> u64 {
+    let mut covered = 0;
+    let mut current: Option<(u64, u64)> = None;
+    for e in &trace.events {
+        match current {
+            Some((start, end)) if e.start_ns <= end => current = Some((start, end.max(e.end_ns))),
+            _ => {
+                if let Some((start, end)) = current {
+                    covered += end - start;
+                }
+                current = Some((e.start_ns, e.end_ns.max(e.start_ns)));
+            }
+        }
+    }
+    covered + current.map_or(0, |(start, end)| end - start)
+}
+
 /// Analyze a complete trace and compute energy attribution per region/kernel.
 pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
-    if trace.events.is_empty() {
-        return TraceAnalysis {
-            total_trace_duration_sec: 0.0,
-            total_trace_energy_joules: 0.0,
-            avg_trace_power_watts: 0.0,
-            regions: Vec::new(),
-        };
-    }
-
-    // Determine overall trace time bounds
-    let min_start = trace.events.iter().map(|e| e.start_ns).min().unwrap_or(0);
-    let max_end = trace.events.iter().map(|e| e.end_ns).max().unwrap_or(0);
+    // The window spans every event and every sample, so idle phases are measured too
+    let (min_start, max_end) = trace.time_bounds().unwrap_or((0, 0));
     let total_trace_duration_sec = (max_end.saturating_sub(min_start)) as f64 / 1_000_000_000.0;
     let total_trace_energy_joules = energy_joules(trace, min_start, max_end);
     let avg_trace_power_watts = if total_trace_duration_sec > 0.0 {
@@ -134,6 +149,11 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
             inclusive[p] += inclusive[i];
         }
     }
+
+    let exclusive_sum: f64 = exclusive.iter().sum();
+    let idle_energy_joules = (total_trace_energy_joules - exclusive_sum).max(0.0);
+    let idle_duration_sec =
+        (max_end - min_start).saturating_sub(covered_ns(trace)) as f64 / 1_000_000_000.0;
 
     // Aggregate by (name, category)
     struct Agg {
@@ -197,6 +217,8 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
         total_trace_duration_sec,
         total_trace_energy_joules,
         avg_trace_power_watts,
+        idle_duration_sec,
+        idle_energy_joules,
         regions,
     }
 }
@@ -243,6 +265,16 @@ mod tests {
 
         assert!((find(&analysis, "A").exclusive_energy_joules - 150.0).abs() < 1e-6);
         assert!((find(&analysis, "B").exclusive_energy_joules - 150.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_energy_outside_events_is_idle() {
+        let events = vec![event(1, 0, "A", 1, 2)];
+        let analysis = analyze_trace(&Trace::new(None, events, constant_power(4)));
+
+        assert!((analysis.total_trace_energy_joules - 400.0).abs() < 1e-6);
+        assert!((analysis.idle_energy_joules - 300.0).abs() < 1e-6);
+        assert!((analysis.idle_duration_sec - 3.0).abs() < 1e-9);
     }
 
     #[test]
