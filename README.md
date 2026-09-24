@@ -67,7 +67,7 @@ export KOKKOS_TOOLS_OUTPUT_PATH=./my_trace
 kokkos-energy analyze ./my_trace --report report.html --perfetto trace.json
 ```
 
-Output example:
+Output example (rows below 0.1% trimmed):
 
 ```text
   Kokkos Energy Analysis - App: energy_bench (Host: wsl-rtx3080ti, Backend: CUDA)
@@ -89,6 +89,8 @@ Output example:
 │ Total Trace                                 ┆ -               ┆ -     ┆ 10.014       ┆ 2158.32         ┆ 2158.32         ┆ 215.5         ┆ 100.0% │
 └─────────────────────────────────────────────┴─────────────────┴───────┴──────────────┴─────────────────┴─────────────────┴───────────────┴────────┘
   GPU 0: 2158.32 J, 215.5 W avg
+
+  Note: 100.0% of events are shorter than the 20.4 ms sampling period, their power is interpolated between samples rather than measured.
 ```
 
 ---
@@ -103,6 +105,8 @@ Output example:
 - **Avg Power** is the inclusive energy divided by the block duration.
 - The lines under the table give the energy of each measured device. The table
   sums all of them.
+- A final note appears when events are shorter than the sampling period, with the
+  share of such events. See Limits below.
 
 ### Attribution Rules
 
@@ -114,20 +118,32 @@ Output example:
 - Blocks that overlap without being nested, such as concurrent kernels, share the
   energy of the overlapping interval equally.
 
+### Multi-Rank Traces
+
+Under MPI or Slurm the connector writes one `rank_<N>` subdirectory per rank.
+`analyze` and `run` detect them and print one report per rank, in rank order.
+Exports are written once per rank with the rank appended to the file name, for
+instance `--report report.html` produces `report_rank_0.html`, `report_rank_1.html`.
+
+Each rank samples every GPU visible on its node. Ranks sharing a node therefore
+report the same device energy: do not sum device or total energies across ranks.
+
 ### Limits
 
 - The connector samples power every 20 ms. Most kernels are shorter than that, so
   their power is interpolated between two samples rather than measured. Per-kernel
-  figures are reliable in aggregate over many calls, not for a single launch.
-- A trace directory holding several `rank_<N>` subdirectories must be analyzed one
-  rank at a time. A single rank subdirectory is picked up automatically.
+  figures are reliable in aggregate over many calls, not for a single launch. The
+  report prints the share of affected events so this is never silent.
+- Overlapping blocks share energy equally because a device reports a single power
+  value. With the default Kokkos global fencing, kernels do not overlap and this
+  rule never applies.
 
 ---
 
 ## Visualizing Traces
 
 ### 1. Interactive Perfetto Timeline
-Pass `--perfetto trace.json` and open [ui.perfetto.dev](https://ui.perfetto.dev). Drag-and-drop the JSON file to navigate slices with `W`, `A`, `S`, `D`. Blocks are placed on one track per nesting depth and each device gets its own power counter.
+Pass `--perfetto trace.json` and open [ui.perfetto.dev](https://ui.perfetto.dev). Drag-and-drop the JSON file to navigate slices with `W`, `A`, `S`, `D`. Nested blocks are stacked on a single track. Blocks that overlap without being nested are moved to an extra track, and each device gets its own power counter.
 
 ### 2. Standalone HTML Report
 Pass `--report report.html` and open the generated file directly in any web browser.

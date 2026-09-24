@@ -12,8 +12,8 @@ An execution trace consists of a directory containing:
 All timestamps are expressed as **64-bit unsigned integers in nanoseconds** (`uint64_t`), referencing UNIX epoch.
 
 When the connector detects an MPI rank, the files are written to a `rank_<N>`
-subdirectory of the output path. `kokkos-energy` resolves a single rank
-subdirectory automatically.
+subdirectory of the output path. `kokkos-energy` analyzes every rank subdirectory
+it finds, one report per rank.
 
 ---
 
