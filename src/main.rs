@@ -35,6 +35,10 @@ enum Commands {
         #[arg(short, long, value_name = "LIB_PATH", env = "KOKKOS_TOOLS_LIBS")]
         lib: PathBuf,
 
+        /// Keep the raw trace files in this directory instead of a temporary one
+        #[arg(short, long, value_name = "DIR")]
+        keep_trace: Option<PathBuf>,
+
         /// Optional path to export a Perfetto/Chrome-Tracing JSON trace
         #[arg(short, long, value_name = "PERFETTO_FILE")]
         perfetto: Option<PathBuf>,
@@ -63,6 +67,7 @@ fn main() -> Result<()> {
 
         Commands::Run {
             lib,
+            keep_trace,
             perfetto,
             report,
             app_command,
@@ -70,6 +75,7 @@ fn main() -> Result<()> {
             let code = engine::run_instrumented_command(
                 &lib,
                 &app_command,
+                keep_trace.as_deref(),
                 perfetto.as_deref(),
                 report.as_deref(),
             )?;
