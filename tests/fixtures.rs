@@ -46,6 +46,9 @@ fn multi_domain_series_are_integrated_separately() {
 
     // GPU holds 100 W and CPU holds 50 W during 2 seconds
     assert_close(region(&analysis, "Step").inclusive_energy_joules, 300.0);
+    assert_eq!(analysis.devices.len(), 2);
+    assert_close(analysis.devices[0].energy_joules, 200.0);
+    assert_close(analysis.devices[1].energy_joules, 100.0);
 }
 
 #[test]
