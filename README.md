@@ -26,7 +26,7 @@ accelerators are not sampled by the connector.
 ### Analysis tool (`kokkos-energy`)
 
 - Prebuilt release binary: Linux x86_64, statically linked, no runtime dependency.
-- Build from source: Rust 1.85 or newer. The `analyze` command runs on any platform
+- Build from source: Rust 1.88 or newer. The `analyze` command runs on any platform
   supported by Rust, the `run` command needs a platform where the connector runs.
 
 ### Profiling connector (`libkokkos_energy.so`)
