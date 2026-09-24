@@ -97,11 +97,7 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
     }
 
     // Sort by energy descending
-    regions.sort_by(|a, b| {
-        b.total_energy_joules
-            .partial_cmp(&a.total_energy_joules)
-            .unwrap()
-    });
+    regions.sort_by(|a, b| b.total_energy_joules.total_cmp(&a.total_energy_joules));
 
     TraceAnalysis {
         total_trace_duration_sec,
