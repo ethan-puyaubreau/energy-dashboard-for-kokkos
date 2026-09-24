@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use serde_json::json;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -20,20 +21,28 @@ pub fn export_html_report<P: AsRef<Path>>(
         .with_context(|| format!("Failed to create HTML report: {}", out_path.display()))?;
 
     // Determine baseline timestamp in seconds
-    let min_ts_ns = trace
-        .events
-        .iter()
-        .map(|e| e.start_ns)
-        .chain(trace.samples().map(|s| s.timestamp_ns))
-        .min()
-        .unwrap_or(0);
+    let min_ts_ns = trace.time_bounds().map_or(0, |(min, _)| min);
 
-    // Prepare time-series points
-    let time_sec: Vec<f64> = trace
-        .samples()
-        .map(|s| (s.timestamp_ns.saturating_sub(min_ts_ns)) as f64 / 1_000_000_000.0)
+    // One Plotly line per power series
+    let timeline_traces: Vec<_> = trace
+        .series
+        .iter()
+        .map(|s| {
+            let time_sec: Vec<f64> = s
+                .samples
+                .iter()
+                .map(|p| (p.timestamp_ns.saturating_sub(min_ts_ns)) as f64 / 1_000_000_000.0)
+                .collect();
+            let power_watts: Vec<f64> = s.samples.iter().map(|p| p.power_watts).collect();
+            json!({
+                "x": time_sec,
+                "y": power_watts,
+                "mode": "lines",
+                "name": format!("{} {}", s.domain, s.device_id),
+                "line": { "width": 2 }
+            })
+        })
         .collect();
-    let power_watts: Vec<f64> = trace.samples().map(|s| s.power_watts).collect();
 
     // Prepare summary bar chart data
     let region_names: Vec<String> = analysis.regions.iter().map(|r| r.name.clone()).collect();
@@ -54,8 +63,7 @@ pub fn export_html_report<P: AsRef<Path>>(
         .and_then(|m| m.hostname.as_deref())
         .unwrap_or("Unknown Node");
 
-    let time_sec_json = serde_json::to_string(&time_sec)?;
-    let power_watts_json = serde_json::to_string(&power_watts)?;
+    let timeline_traces_json = serde_json::to_string(&timeline_traces)?;
     let region_names_json = serde_json::to_string(&region_names)?;
     let region_energies_json = serde_json::to_string(&region_energies)?;
 
@@ -138,18 +146,7 @@ pub fn export_html_report<P: AsRef<Path>>(
   </div>
 
   <script>
-    const timeSec = {time_sec_json};
-    const powerWatts = {power_watts_json};
-
-    const timelineTrace = {{
-      x: timeSec,
-      y: powerWatts,
-      mode: 'lines',
-      name: 'Power (Watts)',
-      line: {{ color: '#38bdf8', width: 2 }},
-      fill: 'tozeroy',
-      fillcolor: 'rgba(56, 189, 248, 0.1)'
-    }};
+    const timelineTraces = {timeline_traces_json};
 
     const timelineLayout = {{
       title: {{ text: 'Power Telemetry Timeline', font: {{ color: '#f8fafc' }} }},
@@ -157,10 +154,11 @@ pub fn export_html_report<P: AsRef<Path>>(
       plot_bgcolor: 'transparent',
       xaxis: {{ title: 'Time (s)', color: '#94a3b8', gridcolor: '#334155' }},
       yaxis: {{ title: 'Power (W)', color: '#94a3b8', gridcolor: '#334155' }},
+      legend: {{ font: {{ color: '#94a3b8' }} }},
       margin: {{ t: 40, r: 20, l: 60, b: 40 }}
     }};
 
-    Plotly.newPlot('timelinePlot', [timelineTrace], timelineLayout, {{ responsive: true }});
+    Plotly.newPlot('timelinePlot', timelineTraces, timelineLayout, {{ responsive: true }});
 
     const barTrace = {{
       x: {region_names_json},
@@ -190,8 +188,7 @@ pub fn export_html_report<P: AsRef<Path>>(
         duration = analysis.total_trace_duration_sec,
         avg_power = analysis.avg_trace_power_watts,
         num_regions = analysis.regions.len(),
-        time_sec_json = time_sec_json,
-        power_watts_json = power_watts_json,
+        timeline_traces_json = timeline_traces_json,
         region_names_json = region_names_json,
         region_energies_json = region_energies_json
     );
