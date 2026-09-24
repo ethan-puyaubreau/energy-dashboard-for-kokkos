@@ -88,6 +88,11 @@ g++ -std=c++20 -O3 -fPIC -shared kp_energy_profiler.cpp \
     -o libkokkos_energy.so
 ```
 
+Traces written by the 2025 version of the connector, such as the ones published with the
+[SMC 2025 poster](https://github.com/ethan-puyaubreau/smc2025-gpu-energy-poster#data-and-reproduction),
+use an older CSV layout. Convert them with `analysis/to_trace_v1.py` from that repository, then
+analyze the output directory as below.
+
 ### 3. Usage Modes
 
 #### Mode A: Direct Runner (Recommended)

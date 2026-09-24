@@ -158,11 +158,11 @@ fn covered_ns(trace: &Trace) -> u64 {
     covered + current.map_or(0, |(start, end)| end - start)
 }
 
-/// Median interval in nanoseconds between consecutive samples of the same series.
 /// NVML refreshes its power reading about every 100 ms (Yang et al., 2023), so events
 /// shorter than that are not measured on their own, however fast the connector samples.
 const NVML_REFRESH_NS: u64 = 100_000_000;
 
+/// Median interval in nanoseconds between consecutive samples of the same series.
 fn median_sampling_period_ns(trace: &Trace) -> Option<u64> {
     let mut intervals: Vec<u64> = trace
         .series
@@ -227,7 +227,15 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
         (max_end - min_start).saturating_sub(covered_ns(trace)) as f64 / 1_000_000_000.0;
 
     let sampling_period_ns = median_sampling_period_ns(trace);
-    let resolution_ns = sampling_period_ns.map(|period| period.max(NVML_REFRESH_NS));
+    // The NVML floor only applies when a GPU is measured; CPU domains keep the sampling period.
+    let has_gpu = trace.series.iter().any(|s| s.domain == DeviceDomain::Gpu);
+    let resolution_ns = sampling_period_ns.map(|period| {
+        if has_gpu {
+            period.max(NVML_REFRESH_NS)
+        } else {
+            period
+        }
+    });
     let short_events = resolution_ns.map_or(0, |resolution| {
         trace
             .events
@@ -405,6 +413,28 @@ mod tests {
         assert_eq!(analysis.sampling_period_sec, Some(0.02));
         assert_eq!(analysis.resolution_sec, Some(0.1));
         assert!((analysis.short_event_fraction - 1.0).abs() < 1e-9);
+
+        // Without a GPU series the NVML floor does not apply.
+        let cpu = Trace::new(
+            None,
+            vec![Event {
+                start_ns: 0,
+                end_ns: 50 * ms,
+                ..event(1, 0, "Kernel", 0, 0)
+            }],
+            (0..=10)
+                .map(|i| PowerSample {
+                    timestamp_ns: i * 20 * ms,
+                    domain: DeviceDomain::CpuPkg,
+                    device_id: 0,
+                    power_watts: 50.0,
+                    energy_joules: None,
+                })
+                .collect(),
+        );
+        let analysis = analyze_trace(&cpu);
+        assert_eq!(analysis.resolution_sec, Some(0.02));
+        assert_eq!(analysis.short_event_fraction, 0.0);
     }
 
     #[test]

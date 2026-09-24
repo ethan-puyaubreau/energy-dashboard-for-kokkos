@@ -14,6 +14,21 @@ version: 0.3.0
 date-released: 2026-09-24
 license: Apache-2.0
 repository-code: "https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos"
+references:
+  - type: generic
+    title: "Understanding GPU Energy Dynamics in HPC Applications"
+    authors:
+      - family-names: Puyaubreau
+        given-names: Ethan
+      - family-names: Arndt
+        given-names: Daniel
+      - family-names: Bludau
+        given-names: Jakob
+      - family-names: Lebrun-Grandié
+        given-names: Damien
+    notes: "Poster, Smoky Mountains Computational Sciences and Engineering Conference (SMC 2025)"
+    url: "https://ethan-puyaubreau.github.io/smc2025-gpu-energy-poster/"
+    year: 2025
 keywords:
   - Kokkos
   - energy
