@@ -67,8 +67,8 @@ Download the static Linux x86_64 binary from the
 check its checksum and extract it:
 
 ```bash
-sha256sum -c energy-dashboard-for-kokkos-v0.3.0-x86_64-unknown-linux-musl.tar.gz.sha256
-tar xzf energy-dashboard-for-kokkos-v0.3.0-x86_64-unknown-linux-musl.tar.gz
+sha256sum -c energy-for-kokkos-v0.4.0-x86_64-unknown-linux-musl.tar.gz.sha256
+tar xzf energy-for-kokkos-v0.4.0-x86_64-unknown-linux-musl.tar.gz
 ```
 
 Or build from source:
