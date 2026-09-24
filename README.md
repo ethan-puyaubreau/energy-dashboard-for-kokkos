@@ -13,7 +13,7 @@ High-performance energy analysis and profiling tool for Kokkos applications.
 - **Hierarchical Energy Attribution:** Accurately attributes energy across enclosing regions and kernels using trapezoidal numerical integration.
 - **HPC Console Report:** Formatted summary table printed directly to stdout (ideal for Slurm batch job logs).
 - **Perfetto / Chrome Tracing Export:** Generate interactive `trace.json` timelines viewable at [ui.perfetto.dev](https://ui.perfetto.dev).
-- **Standalone HTML Dashboard:** Export self-contained offline reports (`report.html`) with embedded interactive Plotly charts.
+- **Standalone HTML Dashboard:** Export self-contained offline reports (`report.html`) with embedded interactive Plotly charts, usable on compute nodes without network access.
 - **Direct Runner Mode:** Transparently launch an application and profile it in a single command.
 
 ---
@@ -49,6 +49,10 @@ Run and analyze your Kokkos application in a single step:
 kokkos-energy run --lib /path/to/libkokkos_energy.so --report report.html --perfetto trace.json -- ./my_app [args...]
 ```
 
+The raw trace is written to a temporary directory and removed on exit. Pass
+`--keep-trace <DIR>` to keep the CSV files for a later `analyze`. The exit code
+of the application is forwarded, so batch jobs still see its failures.
+
 #### Mode B: Post-Mortem Analysis
 
 If the application was run independently:
@@ -67,29 +71,63 @@ Output example:
 
 ```text
   Kokkos Energy Analysis - App: energy_bench (Host: wsl-rtx3080ti, Backend: CUDA)
-┌─────────────────────────────────────────────┬─────────────────┬───────┬──────────────┬────────────┬───────────────┬──────────┐
-│ Block / Kernel                              ┆ Category        ┆ Calls ┆ Duration (s) ┆ Energy (J) ┆ Avg Power (W) ┆ % Energy │
-╞═════════════════════════════════════════════╪═════════════════╪═══════╪══════════════╪════════════╪═══════════════╪══════════╡
-│ Reduction                                   ┆ USER_REGION     ┆ 1     ┆ 4.000        ┆ 1082.61    ┆ 270.6         ┆ 50.2%    │
-├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┤
-│ reduce                                      ┆ PARALLEL_REDUCE ┆ 8660  ┆ 3.930        ┆ 1063.62    ┆ 270.6         ┆ 49.3%    │
-├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┤
-│ MatVec                                      ┆ USER_REGION     ┆ 1     ┆ 4.000        ┆ 839.08     ┆ 209.8         ┆ 38.9%    │
-├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┤
-│ matvec                                      ┆ PARALLEL_FOR    ┆ 8217  ┆ 3.941        ┆ 826.73     ┆ 209.8         ┆ 38.3%    │
-├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┤
-│ daxpy                                       ┆ PARALLEL_FOR    ┆ 39882 ┆ 1.835        ┆ 215.53     ┆ 117.5         ┆ 10.0%    │
-├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┤
-│ Total Trace (Active)                        ┆ -               ┆ -     ┆ 10.012       ┆ 2157.92    ┆ 215.5         ┆ 100.0%   │
-└─────────────────────────────────────────────┴─────────────────┴───────┴──────────────┴────────────┴───────────────┴──────────┘
+┌─────────────────────────────────────────────┬─────────────────┬───────┬──────────────┬─────────────────┬─────────────────┬───────────────┬────────┐
+│ Block / Kernel                              ┆ Category        ┆ Calls ┆ Duration (s) ┆ Energy Incl (J) ┆ Energy Self (J) ┆ Avg Power (W) ┆ % Self │
+╞═════════════════════════════════════════════╪═════════════════╪═══════╪══════════════╪═════════════════╪═════════════════╪═══════════════╪════════╡
+│ Reduction                                   ┆ USER_REGION     ┆ 1     ┆ 4.000        ┆ 1082.61         ┆ 18.99           ┆ 270.6         ┆ 0.9%   │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ reduce                                      ┆ PARALLEL_REDUCE ┆ 8660  ┆ 3.930        ┆ 1063.62         ┆ 1063.62         ┆ 270.6         ┆ 49.3%  │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ MatVec                                      ┆ USER_REGION     ┆ 1     ┆ 4.000        ┆ 839.08          ┆ 12.37           ┆ 209.8         ┆ 0.6%   │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ matvec                                      ┆ PARALLEL_FOR    ┆ 8217  ┆ 3.941        ┆ 826.72          ┆ 826.72          ┆ 209.8         ┆ 38.3%  │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ daxpy                                       ┆ PARALLEL_FOR    ┆ 39882 ┆ 1.835        ┆ 215.53          ┆ 215.53          ┆ 117.5         ┆ 10.0%  │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ Idle (outside events)                       ┆ -               ┆ -     ┆ 0.177        ┆ 20.83           ┆ 20.83           ┆ 117.9         ┆ 1.0%   │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ Total Trace                                 ┆ -               ┆ -     ┆ 10.014       ┆ 2158.32         ┆ 2158.32         ┆ 215.5         ┆ 100.0% │
+└─────────────────────────────────────────────┴─────────────────┴───────┴──────────────┴─────────────────┴─────────────────┴───────────────┴────────┘
+  GPU 0: 2158.32 J, 215.5 W avg
 ```
+
+---
+
+## Reading the Report
+
+- **Energy Incl** is the energy spent while a block was active, children included.
+- **Energy Self** is the energy spent in the block itself, children excluded. The
+  `% Self` column is based on it, so percentages sum to 100% with the idle row.
+- **Idle (outside events)** is the energy measured while no instrumented block was
+  running, including before the first and after the last event.
+- **Avg Power** is the inclusive energy divided by the block duration.
+- The lines under the table give the energy of each measured device. The table
+  sums all of them.
+
+### Attribution Rules
+
+- Each power series (one per domain and device) is integrated on its own with the
+  trapezoidal rule, then the series are summed.
+- Power is linearly interpolated at block boundaries. When a hardware cumulative
+  energy counter brackets both boundaries, its interpolated difference is used
+  instead.
+- Blocks that overlap without being nested, such as concurrent kernels, share the
+  energy of the overlapping interval equally.
+
+### Limits
+
+- The connector samples power every 20 ms. Most kernels are shorter than that, so
+  their power is interpolated between two samples rather than measured. Per-kernel
+  figures are reliable in aggregate over many calls, not for a single launch.
+- A trace directory holding several `rank_<N>` subdirectories must be analyzed one
+  rank at a time. A single rank subdirectory is picked up automatically.
 
 ---
 
 ## Visualizing Traces
 
 ### 1. Interactive Perfetto Timeline
-Pass `--perfetto trace.json` and open [ui.perfetto.dev](https://ui.perfetto.dev). Drag-and-drop the JSON file to navigate slices with `W`, `A`, `S`, `D`.
+Pass `--perfetto trace.json` and open [ui.perfetto.dev](https://ui.perfetto.dev). Drag-and-drop the JSON file to navigate slices with `W`, `A`, `S`, `D`. Blocks are placed on one track per nesting depth and each device gets its own power counter.
 
 ### 2. Standalone HTML Report
 Pass `--report report.html` and open the generated file directly in any web browser.
