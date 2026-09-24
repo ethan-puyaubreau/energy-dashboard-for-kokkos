@@ -1,6 +1,6 @@
-# Contributing to kokkos-energy
+# Contributing to energy-dashboard-for-kokkos
 
-Thanks for your interest in improving `kokkos-energy`. This guide covers the scope of
+Thanks for your interest in improving `energy-dashboard-for-kokkos`. This guide covers the scope of
 the project, how to set up a development environment and the conventions a pull
 request is expected to follow.
 
@@ -38,7 +38,7 @@ Run the same checks as CI before pushing:
 
 ```bash
 cargo fmt --check
-cargo clippy -- -D warnings
+cargo clippy --all-targets -- -D warnings
 cargo test
 RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
 ```
@@ -103,7 +103,7 @@ Internal refactoring does not need an entry.
 
 Use the bug report template. An attribution bug can rarely be reproduced without the
 trace, so attach the trace directory (`events.csv`, `power_samples.csv`,
-`metadata.json`) as a zip archive when you can. `kokkos-energy run --keep-trace <DIR>`
+`metadata.json`) as a zip archive when you can. `energy-dashboard-for-kokkos run --keep-trace <DIR>`
 keeps it for you.
 
 ## Releasing
@@ -116,7 +116,7 @@ For maintainers only.
 3. Merge to `main`, then tag and push:
 
    ```bash
-   git tag -a vX.Y.Z -m "kokkos-energy X.Y.Z"
+   git tag -a vX.Y.Z -m "energy-dashboard-for-kokkos X.Y.Z"
    git push origin vX.Y.Z
    ```
 

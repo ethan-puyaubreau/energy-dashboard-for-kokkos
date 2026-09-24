@@ -1,10 +1,10 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use kokkos_energy::{analyze_and_report, engine};
+use energy_dashboard_for_kokkos::{analyze_and_report, engine};
 use std::path::PathBuf;
 
 #[derive(Parser)]
-#[command(name = "kokkos-energy")]
+#[command(name = "energy-dashboard-for-kokkos")]
 #[command(author = "Ethan Puyaubreau <ethan.puyaubreau@gmail.com>")]
 #[command(version, about = "HPC energy analysis and profiling tool for Kokkos applications", long_about = None)]
 struct Cli {
@@ -31,7 +31,7 @@ enum Commands {
 
     /// Run an application with Kokkos energy profiling and analyze output immediately
     Run {
-        /// Path to the energy profiler library (e.g. libkokkos_energy.so)
+        /// Path to the energy profiler library (e.g. libenergy_dashboard_connector.so)
         #[arg(short, long, value_name = "LIB_PATH", env = "KOKKOS_TOOLS_LIBS")]
         lib: PathBuf,
 

@@ -1,5 +1,5 @@
-use kokkos_energy::engine::{analyze_trace, RegionMetrics, TraceAnalysis};
-use kokkos_energy::parser::load_trace_dir;
+use energy_dashboard_for_kokkos::engine::{analyze_trace, RegionMetrics, TraceAnalysis};
+use energy_dashboard_for_kokkos::parser::load_trace_dir;
 
 /// Analyze a trace directory located under tests/fixtures.
 fn analyze_fixture(name: &str) -> TraceAnalysis {
@@ -67,4 +67,16 @@ fn real_rtx3080ti_trace_is_consistent() {
     // Every Joule is attributed exactly once, to an event or to idle
     let attributed = exclusive_sum + analysis.idle_energy_joules;
     assert!((attributed - analysis.total_trace_energy_joules).abs() < 1e-6);
+}
+
+#[test]
+fn h100_dbscan_run_matches_the_published_figure() {
+    // One ArborX DBSCAN run from the SMC 2025 poster data, converted with
+    // analysis/to_trace_v1.py from the poster repository. Power is interpolated at the
+    // region boundaries, hence 771.8 J where the poster script reads 769.3 J.
+    let analysis = analyze_fixture("h100_arborx_fdbscan");
+    let dbscan = region(&analysis, "DBSCANCalculation");
+
+    assert!((dbscan.total_duration_sec - 2.681).abs() < 1e-3);
+    assert!((dbscan.inclusive_energy_joules - 771.83).abs() < 0.01);
 }

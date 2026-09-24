@@ -8,18 +8,28 @@ use crate::model::Trace;
 
 /// Describe how many events are too short to be measured by the power sampler.
 ///
-/// Returns `None` when every event spans at least one sampling period.
+/// Returns `None` when every event lasts at least as long as the power readings resolve.
 pub fn sampling_note(analysis: &TraceAnalysis) -> Option<String> {
     let period = analysis.sampling_period_sec?;
+    let resolution = analysis.resolution_sec?;
     if analysis.short_event_fraction <= 0.0 {
         return None;
     }
 
+    let limit = if resolution > period {
+        format!(
+            "{:.0} ms (sampling every {:.1} ms, NVML refresh about 100 ms)",
+            resolution * 1_000.0,
+            period * 1_000.0
+        )
+    } else {
+        format!("the {:.1} ms sampling period", period * 1_000.0)
+    };
+    // Round down, so a few long events never show as "100.0%".
+    let percent = (analysis.short_event_fraction * 1_000.0).floor() / 10.0;
     Some(format!(
-        "{:.1}% of events are shorter than the {:.1} ms sampling period, \
-         their power is interpolated between samples rather than measured.",
-        analysis.short_event_fraction * 100.0,
-        period * 1_000.0
+        "{percent:.1}% of events are shorter than {limit}, their power is interpolated \
+         between readings rather than measured."
     ))
 }
 
@@ -31,11 +41,11 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
         let host = meta.hostname.as_deref().unwrap_or("Unknown");
         let backend = meta.kokkos_backend.as_deref().unwrap_or("Unknown");
         println!(
-            "  Kokkos Energy Analysis - App: {} (Host: {}, Backend: {})",
+            "  energy-dashboard-for-kokkos - App: {} (Host: {}, Backend: {})",
             app, host, backend
         );
     } else {
-        println!("  Kokkos Energy Analysis Report");
+        println!("  energy-dashboard-for-kokkos report");
     }
 
     let mut table = Table::new();
@@ -111,4 +121,28 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
         println!("\n  Note: {note}");
     }
     println!();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn analysis(period: f64, resolution: f64) -> TraceAnalysis {
+        TraceAnalysis {
+            sampling_period_sec: Some(period),
+            resolution_sec: Some(resolution),
+            short_event_fraction: 0.5,
+            ..TraceAnalysis::default()
+        }
+    }
+
+    #[test]
+    fn note_names_nvml_only_when_it_sets_the_limit() {
+        let gpu = sampling_note(&analysis(0.02, 0.1)).unwrap();
+        assert!(gpu.contains("shorter than 100 ms (sampling every 20.0 ms, NVML refresh"));
+
+        let cpu = sampling_note(&analysis(0.02, 0.02)).unwrap();
+        assert!(cpu.contains("shorter than the 20.0 ms sampling period"));
+        assert!(!cpu.contains("NVML"));
+    }
 }

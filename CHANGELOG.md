@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-24
+
+### Added
+
+- `CITATION.cff` with the software metadata.
+- The v1 KokkosP connector under `connector/` (`libenergy_dashboard_connector.so`), with a CMake build and a CI job that builds
+  it against an NVML stub, traces a simulated Kokkos run and analyzes the trace.
+- A regression test on one ArborX DBSCAN run traced on an H100 NVL for the SMC 2025 poster.
+
+### Changed
+
+- The package and the binary are renamed from `kokkos-energy` to
+  `energy-dashboard-for-kokkos`, the name of the repository, so that the tool is not
+  mistaken for an official Kokkos project. Release archives follow the new name.
+  Scripts calling `kokkos-energy` need the new binary name; the analysis, the trace
+  format and the command line options are unchanged.
+- In GPU traces, events are flagged as not measured individually when shorter than the
+  NVML refresh interval (about 100 ms), not only when shorter than the sampling period.
+  CPU-only traces keep the sampling period. The README states that limit.
+- The terminal and HTML report headers name the tool instead of "Kokkos Energy".
+
 ## [0.2.0] - 2026-09-24
 
 ### Added
@@ -53,5 +74,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trapezoidal energy integration and attribution per region and kernel.
 - Terminal report, Perfetto trace export and HTML report.
 
-[Unreleased]: https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos/releases/tag/v0.2.0

@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "energy-dashboard-for-kokkos"
+abstract: >-
+  Per-region energy attribution for Kokkos applications: reads the power trace
+  recorded by a Kokkos Tools connector and attributes the measured energy to
+  regions and kernels, with a terminal table, a Perfetto trace and an HTML report.
+type: software
+authors:
+  - family-names: Puyaubreau
+    given-names: Ethan
+    orcid: "https://orcid.org/0009-0003-1770-8830"
+version: 0.3.0
+date-released: 2026-09-24
+license: Apache-2.0
+repository-code: "https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos"
+references:
+  - type: generic
+    title: "Understanding GPU Energy Dynamics in HPC Applications"
+    authors:
+      - family-names: Puyaubreau
+        given-names: Ethan
+      - family-names: Arndt
+        given-names: Daniel
+      - family-names: Bludau
+        given-names: Jakob
+      - family-names: Lebrun-Grandié
+        given-names: Damien
+    notes: "Poster, Smoky Mountains Computational Sciences and Engineering Conference (SMC 2025)"
+    url: "https://ethan-puyaubreau.github.io/smc2025-gpu-energy-poster/"
+    year: 2025
+keywords:
+  - Kokkos
+  - energy
+  - GPU
+  - HPC
+  - profiling

@@ -1,0 +1,6 @@
+{
+  "spec_version": "1.0",
+  "app_name": "ArborX DBSCAN (fdbscan), SMC 2025 poster run",
+  "hostname": "H100 NVL node",
+  "kokkos_backend": "CUDA"
+}
