@@ -18,13 +18,22 @@ pub fn parse_power_csv<P: AsRef<Path>>(path: P) -> Result<Vec<PowerSample>> {
         .from_reader(file);
 
     let mut samples = Vec::new();
-    for result in rdr.deserialize() {
+    for (index, result) in rdr.deserialize().enumerate() {
         let sample: PowerSample = result.with_context(|| {
             format!(
                 "Malformed record in power samples file: {}",
                 path.as_ref().display()
             )
         })?;
+
+        // NaN or infinite values would silently poison every energy sum
+        if !sample.power_watts.is_finite() || sample.energy_joules.is_some_and(|e| !e.is_finite()) {
+            anyhow::bail!(
+                "Non-finite value in power samples file {} at record {}",
+                path.as_ref().display(),
+                index + 1
+            );
+        }
         samples.push(sample);
     }
 
@@ -45,5 +54,18 @@ mod tests {
         assert_eq!(samples[0].power_watts, 250.5);
         assert_eq!(samples[0].energy_joules, None);
         assert_eq!(samples[1].energy_joules, Some(450.2));
+    }
+
+    #[test]
+    fn test_reject_non_finite_power() {
+        let mut file = tempfile::NamedTempFile::new().unwrap();
+        std::io::Write::write_all(
+            &mut file,
+            b"timestamp_ns,domain,device_id,power_watts,energy_joules
+100,GPU,0,NaN,
+",
+        )
+        .unwrap();
+        assert!(parse_power_csv(file.path()).is_err());
     }
 }
