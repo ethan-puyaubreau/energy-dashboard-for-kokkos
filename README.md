@@ -36,7 +36,7 @@ accelerators are not sampled by the connector.
 - Linux x86_64, native or WSL2.
 - NVIDIA driver providing NVML (`libnvidia-ml.so`, installed with the driver). Power
   readings do not require root privileges.
-- CUDA toolkit headers for `nvml.h`, by default in `/usr/local/cuda/include`.
+- CMake 3.18 or newer and the CUDA toolkit, which provides NVML (`find_package(CUDAToolkit)`).
 - GCC 10 or newer, or any compiler supporting `-std=c++20`.
 - Kokkos built with Kokkos Tools support, which is enabled by default.
 
@@ -150,7 +150,7 @@ Output example (rows below 0.1% trimmed):
 └─────────────────────────────────────────────┴─────────────────┴───────┴──────────────┴─────────────────┴─────────────────┴───────────────┴────────┘
   GPU 0: 2158.32 J, 215.5 W avg
 
-  Note: 100.0% of events are shorter than 100 ms (sampling every 20.4 ms, NVML refresh about 100 ms), their power is interpolated between readings rather than measured.
+  Note: 99.9% of events are shorter than 100 ms (sampling every 20.4 ms, NVML refresh about 100 ms), their power is interpolated between readings rather than measured.
 ```
 
 ---

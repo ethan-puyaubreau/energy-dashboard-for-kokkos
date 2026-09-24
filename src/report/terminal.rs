@@ -25,10 +25,11 @@ pub fn sampling_note(analysis: &TraceAnalysis) -> Option<String> {
     } else {
         format!("the {:.1} ms sampling period", period * 1_000.0)
     };
+    // Round down, so a few long events never show as "100.0%".
+    let percent = (analysis.short_event_fraction * 1_000.0).floor() / 10.0;
     Some(format!(
-        "{:.1}% of events are shorter than {limit}, their power is interpolated between \
-         readings rather than measured.",
-        analysis.short_event_fraction * 100.0
+        "{percent:.1}% of events are shorter than {limit}, their power is interpolated \
+         between readings rather than measured."
     ))
 }
 
