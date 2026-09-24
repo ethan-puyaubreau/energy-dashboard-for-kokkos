@@ -1,7 +1,35 @@
 use crate::model::PowerSample;
 
+/// Number of nanoseconds in one second.
+const NS_PER_SEC: f64 = 1_000_000_000.0;
+
+/// Linearly interpolate the power at `t_ns`.
+///
+/// Outside the sampled range the nearest sample is held constant.
+/// `samples` must be sorted by timestamp and non-empty.
+fn power_at(samples: &[PowerSample], t_ns: u64) -> f64 {
+    let i = samples.partition_point(|s| s.timestamp_ns <= t_ns);
+    if i == 0 {
+        return samples[0].power_watts;
+    }
+    if i == samples.len() {
+        return samples[i - 1].power_watts;
+    }
+
+    let (s0, s1) = (&samples[i - 1], &samples[i]);
+    let frac = (t_ns - s0.timestamp_ns) as f64 / (s1.timestamp_ns - s0.timestamp_ns) as f64;
+    s0.power_watts + frac * (s1.power_watts - s0.power_watts)
+}
+
+/// Energy in Joules of a linear power segment between two points.
+fn trapezoid(t0_ns: u64, p0: f64, t1_ns: u64, p1: f64) -> f64 {
+    (p0 + p1) / 2.0 * (t1_ns - t0_ns) as f64 / NS_PER_SEC
+}
+
 /// Integrate power over time using the composite trapezoidal rule.
 ///
+/// Power is linearly interpolated at `start_ns` and `end_ns`, so intervals
+/// shorter than the sampling period still get a time-accurate estimate.
 /// `samples` must be sorted by timestamp.
 ///
 /// Returns energy in Joules between `start_ns` and `end_ns`.
@@ -12,27 +40,10 @@ pub fn integrate_energy_joules(samples: &[PowerSample], start_ns: u64, end_ns: u
         return 0.0;
     }
 
-    // Samples are sorted by timestamp, locate the window by binary search
+    // If hardware cumulative energy is provided on first and last sample, use it
     let lo = samples.partition_point(|s| s.timestamp_ns < start_ns);
     let hi = samples.partition_point(|s| s.timestamp_ns <= end_ns);
     let window = &samples[lo..hi];
-
-    if window.is_empty() {
-        // Approximate using nearest surrounding samples if available
-        let before = lo.checked_sub(1).map(|i| &samples[i]);
-        let after = samples.get(hi);
-
-        let power = match (before, after) {
-            (Some(b), Some(a)) => (b.power_watts + a.power_watts) / 2.0,
-            (Some(b), None) => b.power_watts,
-            (None, Some(a)) => a.power_watts,
-            (None, None) => return 0.0,
-        };
-        let dt_sec = (end_ns - start_ns) as f64 / 1_000_000_000.0;
-        return power * dt_sec;
-    }
-
-    // If hardware cumulative energy is provided on first and last sample, use it
     if let (Some(first), Some(last)) = (window.first(), window.last()) {
         if let (Some(e_start), Some(e_end)) = (first.energy_joules, last.energy_joules) {
             if e_end >= e_start {
@@ -41,35 +52,19 @@ pub fn integrate_energy_joules(samples: &[PowerSample], start_ns: u64, end_ns: u
         }
     }
 
-    // Composite trapezoidal integration
+    // Samples strictly inside the interval, bounded by interpolated endpoints
+    let lo = samples.partition_point(|s| s.timestamp_ns <= start_ns);
+    let hi = samples.partition_point(|s| s.timestamp_ns < end_ns);
+
     let mut total_joules = 0.0;
-
-    // Boundary 1: from start_ns to first sample
-    if let Some(first) = window.first() {
-        if first.timestamp_ns > start_ns {
-            let dt_sec = (first.timestamp_ns - start_ns) as f64 / 1_000_000_000.0;
-            total_joules += first.power_watts * dt_sec;
-        }
+    let mut t0 = start_ns;
+    let mut p0 = power_at(samples, start_ns);
+    for s in &samples[lo..hi] {
+        total_joules += trapezoid(t0, p0, s.timestamp_ns, s.power_watts);
+        t0 = s.timestamp_ns;
+        p0 = s.power_watts;
     }
-
-    // Main window segments
-    for i in 0..window.len().saturating_sub(1) {
-        let s0 = &window[i];
-        let s1 = &window[i + 1];
-        let dt_sec = (s1.timestamp_ns - s0.timestamp_ns) as f64 / 1_000_000_000.0;
-        let avg_power = (s0.power_watts + s1.power_watts) / 2.0;
-        total_joules += avg_power * dt_sec;
-    }
-
-    // Boundary 2: from last sample to end_ns
-    if let Some(last) = window.last() {
-        if end_ns > last.timestamp_ns {
-            let dt_sec = (end_ns - last.timestamp_ns) as f64 / 1_000_000_000.0;
-            total_joules += last.power_watts * dt_sec;
-        }
-    }
-
-    total_joules
+    total_joules + trapezoid(t0, p0, end_ns, power_at(samples, end_ns))
 }
 
 #[cfg(test)]
@@ -77,34 +72,50 @@ mod tests {
     use super::*;
     use crate::model::DeviceDomain;
 
+    /// Build a GPU power sample at `t_sec` seconds.
+    fn gpu(t_sec: f64, power_watts: f64) -> PowerSample {
+        PowerSample {
+            timestamp_ns: (t_sec * NS_PER_SEC) as u64,
+            domain: DeviceDomain::Gpu,
+            device_id: 0,
+            power_watts,
+            energy_joules: None,
+        }
+    }
+
+    /// Integrate between two times expressed in seconds.
+    fn integrate(samples: &[PowerSample], start_sec: f64, end_sec: f64) -> f64 {
+        integrate_energy_joules(
+            samples,
+            (start_sec * NS_PER_SEC) as u64,
+            (end_sec * NS_PER_SEC) as u64,
+        )
+    }
+
     #[test]
     fn test_constant_power_integration() {
         // 100 Watts during 2 seconds = 200 Joules
-        let samples = vec![
-            PowerSample {
-                timestamp_ns: 1_000_000_000,
-                domain: DeviceDomain::Gpu,
-                device_id: 0,
-                power_watts: 100.0,
-                energy_joules: None,
-            },
-            PowerSample {
-                timestamp_ns: 2_000_000_000,
-                domain: DeviceDomain::Gpu,
-                device_id: 0,
-                power_watts: 100.0,
-                energy_joules: None,
-            },
-            PowerSample {
-                timestamp_ns: 3_000_000_000,
-                domain: DeviceDomain::Gpu,
-                device_id: 0,
-                power_watts: 100.0,
-                energy_joules: None,
-            },
-        ];
+        let samples = vec![gpu(1.0, 100.0), gpu(2.0, 100.0), gpu(3.0, 100.0)];
+        assert!((integrate(&samples, 1.0, 3.0) - 200.0).abs() < 1e-6);
+    }
 
-        let energy = integrate_energy_joules(&samples, 1_000_000_000, 3_000_000_000);
-        assert!((energy - 200.0).abs() < 1e-6);
+    #[test]
+    fn test_boundary_is_interpolated() {
+        // Power ramps from 100 W to 300 W, reaching 200 W at t = 1 s
+        let samples = vec![gpu(0.0, 100.0), gpu(2.0, 300.0)];
+        assert!((integrate(&samples, 0.0, 1.0) - 150.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_interval_between_samples() {
+        // Power is 150 W at 0.5 s and 160 W at 0.6 s
+        let samples = vec![gpu(0.0, 100.0), gpu(2.0, 300.0)];
+        assert!((integrate(&samples, 0.5, 0.6) - 15.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_outside_sampled_range_holds_nearest() {
+        let samples = vec![gpu(1.0, 100.0), gpu(2.0, 100.0)];
+        assert!((integrate(&samples, 0.0, 3.0) - 300.0).abs() < 1e-6);
     }
 }
