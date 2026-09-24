@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
-title: "energy-dashboard-for-kokkos"
+title: "energy-for-kokkos"
 abstract: >-
   Per-region energy attribution for Kokkos applications: reads the power trace
   recorded by a Kokkos Tools connector and attributes the measured energy to
@@ -14,7 +14,7 @@ version: 0.3.0
 doi: 10.5281/zenodo.22943410
 date-released: 2026-09-24
 license: Apache-2.0
-repository-code: "https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos"
+repository-code: "https://github.com/ethan-puyaubreau/energy-for-kokkos"
 references:
   - type: generic
     title: "Understanding GPU Energy Dynamics in HPC Applications"

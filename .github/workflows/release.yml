@@ -44,7 +44,7 @@ jobs:
 
       - name: Check binary is static
         run: |
-          binary="target/$TARGET/release/energy-dashboard-for-kokkos"
+          binary="target/$TARGET/release/energy-for-kokkos"
           file "$binary"
           if readelf -d "$binary" | grep -q NEEDED; then
             echo "binary links shared libraries" && exit 1
@@ -56,9 +56,9 @@ jobs:
 
       - name: Package archive
         run: |
-          name="energy-dashboard-for-kokkos-v$VERSION-$TARGET"
+          name="energy-for-kokkos-v$VERSION-$TARGET"
           mkdir "$name"
-          cp "target/$TARGET/release/energy-dashboard-for-kokkos" "$name/"
+          cp "target/$TARGET/release/energy-for-kokkos" "$name/"
           cp README.md DATA_SPEC.md CHANGELOG.md LICENSE THIRD_PARTY_NOTICES.md "$name/"
           tar czf "$name.tar.gz" "$name"
           sha256sum "$name.tar.gz" > "$name.tar.gz.sha256"
@@ -77,6 +77,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" energy-dashboard-for-kokkos-v*.tar.gz* \
-            --title "energy-dashboard-for-kokkos $GITHUB_REF_NAME" \
+          gh release create "$GITHUB_REF_NAME" energy-for-kokkos-v*.tar.gz* \
+            --title "energy-for-kokkos $GITHUB_REF_NAME" \
             --notes-file release_notes.md

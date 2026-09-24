@@ -1,6 +1,6 @@
-# Contributing to energy-dashboard-for-kokkos
+# Contributing to energy-for-kokkos
 
-Thanks for your interest in improving `energy-dashboard-for-kokkos`. This guide covers the scope of
+Thanks for your interest in improving `energy-for-kokkos`. This guide covers the scope of
 the project, how to set up a development environment and the conventions a pull
 request is expected to follow.
 
@@ -29,8 +29,8 @@ Requirements: Rust 1.88 or newer. No GPU is needed to work on the analysis tool,
 test fixtures contain recorded traces.
 
 ```bash
-git clone https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos.git
-cd energy-dashboard-for-kokkos
+git clone https://github.com/ethan-puyaubreau/energy-for-kokkos.git
+cd energy-for-kokkos
 cargo build
 ```
 
@@ -103,7 +103,7 @@ Internal refactoring does not need an entry.
 
 Use the bug report template. An attribution bug can rarely be reproduced without the
 trace, so attach the trace directory (`events.csv`, `power_samples.csv`,
-`metadata.json`) as a zip archive when you can. `energy-dashboard-for-kokkos run --keep-trace <DIR>`
+`metadata.json`) as a zip archive when you can. `energy-for-kokkos run --keep-trace <DIR>`
 keeps it for you.
 
 ## Releasing
@@ -116,7 +116,7 @@ For maintainers only.
 3. Merge to `main`, then tag and push:
 
    ```bash
-   git tag -a vX.Y.Z -m "energy-dashboard-for-kokkos X.Y.Z"
+   git tag -a vX.Y.Z -m "energy-for-kokkos X.Y.Z"
    git push origin vX.Y.Z
    ```
 

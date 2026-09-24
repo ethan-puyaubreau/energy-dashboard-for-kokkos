@@ -18,15 +18,15 @@ body:
     id: command
     attributes:
       label: Command
-      description: The exact energy-dashboard-for-kokkos command and its output.
+      description: The exact energy-for-kokkos command and its output.
       render: text
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: energy-dashboard-for-kokkos version
-      description: Output of `energy-dashboard-for-kokkos --version`.
+      label: energy-for-kokkos version
+      description: Output of `energy-for-kokkos --version`.
     validations:
       required: true
   - type: textarea
@@ -47,4 +47,4 @@ body:
       label: Trace
       description: >
         Attach the trace directory (events.csv, power_samples.csv, metadata.json) as a
-        zip archive. `energy-dashboard-for-kokkos run --keep-trace <DIR>` keeps it for you.
+        zip archive. `energy-for-kokkos run --keep-trace <DIR>` keeps it for you.

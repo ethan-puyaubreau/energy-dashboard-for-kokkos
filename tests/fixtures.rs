@@ -1,5 +1,5 @@
-use energy_dashboard_for_kokkos::engine::{analyze_trace, RegionMetrics, TraceAnalysis};
-use energy_dashboard_for_kokkos::parser::load_trace_dir;
+use energy_for_kokkos::engine::{analyze_trace, RegionMetrics, TraceAnalysis};
+use energy_for_kokkos::parser::load_trace_dir;
 
 /// Analyze a trace directory located under tests/fixtures.
 fn analyze_fixture(name: &str) -> TraceAnalysis {

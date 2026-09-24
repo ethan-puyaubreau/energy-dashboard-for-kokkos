@@ -1,6 +1,6 @@
 # Third Party Notices
 
-`energy-dashboard-for-kokkos` embeds the following third party software in its HTML reports.
+`energy-for-kokkos` embeds the following third party software in its HTML reports.
 
 ## plotly.js 2.35.2
 

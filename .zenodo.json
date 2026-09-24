@@ -1,5 +1,5 @@
 {
-  "title": "energy-dashboard-for-kokkos: per-region energy attribution for Kokkos applications",
+  "title": "energy-for-kokkos: per-region energy attribution for Kokkos applications",
   "description": "Attributes measured GPU energy to the regions and kernels of a Kokkos application. A KokkosP connector records an NVML power trace and the region timestamps; a single Rust binary integrates the trace per region and kernel and reports it as a console table, a Perfetto trace and a standalone HTML report. Independent tool, not an official Kokkos project.",
   "upload_type": "software",
   "creators": [

@@ -1,4 +1,4 @@
-//! Standalone HTML dashboard export.
+//! Standalone HTML report export.
 
 use anyhow::{Context, Result};
 use serde_json::json;
@@ -96,7 +96,7 @@ pub fn export_html_report<P: AsRef<Path>>(
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>energy-dashboard-for-kokkos - {app_name}</title>
+  <title>energy-for-kokkos - {app_name}</title>
   <script>{plotly_js}</script>
   <style>
     body {{
@@ -138,7 +138,7 @@ pub fn export_html_report<P: AsRef<Path>>(
 </head>
 <body>
   <div class="header">
-    <h1>energy-dashboard-for-kokkos report</h1>
+    <h1>energy-for-kokkos report</h1>
     <div class="meta">Application: <strong>{app_name}</strong> | Host: <strong>{hostname}</strong></div>
     {note_html}
   </div>

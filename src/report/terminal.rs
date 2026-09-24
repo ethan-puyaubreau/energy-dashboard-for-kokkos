@@ -41,11 +41,11 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
         let host = meta.hostname.as_deref().unwrap_or("Unknown");
         let backend = meta.kokkos_backend.as_deref().unwrap_or("Unknown");
         println!(
-            "  energy-dashboard-for-kokkos - App: {} (Host: {}, Backend: {})",
+            "  energy-for-kokkos - App: {} (Host: {}, Backend: {})",
             app, host, backend
         );
     } else {
-        println!("  energy-dashboard-for-kokkos report");
+        println!("  energy-for-kokkos report");
     }
 
     let mut table = Table::new();

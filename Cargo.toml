@@ -1,12 +1,12 @@
 [package]
-name = "energy-dashboard-for-kokkos"
+name = "energy-for-kokkos"
 version = "0.3.0"
 edition = "2021"
 rust-version = "1.88"
 authors = ["Ethan Puyaubreau <ethan.puyaubreau@gmail.com>"]
 description = "HPC energy analysis and profiling tool for Kokkos applications"
 license = "Apache-2.0"
-repository = "https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos"
+repository = "https://github.com/ethan-puyaubreau/energy-for-kokkos"
 readme = "README.md"
 keywords = ["kokkos", "energy", "profiling", "hpc", "gpu"]
 categories = ["command-line-utilities", "development-tools::profiling", "science"]

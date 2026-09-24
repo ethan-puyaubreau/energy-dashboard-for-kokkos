@@ -1,14 +1,14 @@
-# energy-dashboard-for-kokkos
+# energy-for-kokkos
 
-[![CI](https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos/actions/workflows/ci.yml/badge.svg)](https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos/actions/workflows/ci.yml)
+[![CI](https://github.com/ethan-puyaubreau/energy-for-kokkos/actions/workflows/ci.yml/badge.svg)](https://github.com/ethan-puyaubreau/energy-for-kokkos/actions/workflows/ci.yml)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22943410.svg)](https://doi.org/10.5281/zenodo.22943410)
 
 Attributes measured GPU energy to the regions and kernels of a Kokkos application.
 
-`energy-dashboard-for-kokkos` provides attribution of electrical energy (Joules) and average power (Watts) to Kokkos execution blocks (`UserRegion`, `parallel_for`, `parallel_reduce`, `parallel_scan`, and memory movements).
+`energy-for-kokkos` provides attribution of electrical energy (Joules) and average power (Watts) to Kokkos execution blocks (`UserRegion`, `parallel_for`, `parallel_reduce`, `parallel_scan`, and memory movements).
 
 > **Note on Kokkos Trademark & Affiliation:**
-> `energy-dashboard-for-kokkos` is an independent analysis tool. It is not an official project of the Kokkos ecosystem nor endorsed by the Linux Foundation.
+> `energy-for-kokkos` is an independent analysis tool. It is not an official project of the Kokkos ecosystem nor endorsed by the Linux Foundation.
 
 ## Features
 
@@ -26,7 +26,7 @@ Attributes measured GPU energy to the regions and kernels of a Kokkos applicatio
 Energy is measured on **NVIDIA GPUs only**. CPU packages, DRAM and other
 accelerators are not sampled by the connector.
 
-### Analysis tool (`energy-dashboard-for-kokkos`)
+### Analysis tool (`energy-for-kokkos`)
 
 - Prebuilt release binary: Linux x86_64, statically linked, no runtime dependency.
 - Build from source: Rust 1.88 or newer. The `analyze` command runs on any platform
@@ -63,7 +63,7 @@ accelerators are not sampled by the connector.
 ### 1. Install
 
 Download the static Linux x86_64 binary from the
-[releases page](https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos/releases),
+[releases page](https://github.com/ethan-puyaubreau/energy-for-kokkos/releases),
 check its checksum and extract it:
 
 ```bash
@@ -77,7 +77,7 @@ Or build from source:
 cargo build --release
 ```
 
-The resulting standalone binary is located at `target/release/energy-dashboard-for-kokkos`.
+The resulting standalone binary is located at `target/release/energy-for-kokkos`.
 
 ### 2. Generate a trace with the profiling connector
 
@@ -110,7 +110,7 @@ analyze the output directory as below.
 Run and analyze your Kokkos application in a single step:
 
 ```bash
-energy-dashboard-for-kokkos run --lib /path/to/libkp_energy_profiler.so --report report.html --perfetto trace.json -- ./my_app [args...]
+energy-for-kokkos run --lib /path/to/libkp_energy_profiler.so --report report.html --perfetto trace.json -- ./my_app [args...]
 ```
 
 The raw trace is written to a temporary directory and removed on exit. Pass
@@ -128,13 +128,13 @@ export KOKKOS_TOOLS_OUTPUT_PATH=./my_trace
 ./my_app
 
 # 2. Analyze the resulting directory
-energy-dashboard-for-kokkos analyze ./my_trace --report report.html --perfetto trace.json
+energy-for-kokkos analyze ./my_trace --report report.html --perfetto trace.json
 ```
 
 Output example (rows below 0.1% trimmed):
 
 ```text
-  energy-dashboard-for-kokkos - App: energy_bench (Host: wsl-rtx3080ti, Backend: CUDA)
+  energy-for-kokkos - App: energy_bench (Host: wsl-rtx3080ti, Backend: CUDA)
 ┌─────────────────────────────────────────────┬─────────────────┬───────┬──────────────┬─────────────────┬─────────────────┬───────────────┬────────┐
 │ Block / Kernel                              ┆ Category        ┆ Calls ┆ Duration (s) ┆ Energy Incl (J) ┆ Energy Self (J) ┆ Avg Power (W) ┆ % Self │
 ╞═════════════════════════════════════════════╪═════════════════╪═══════╪══════════════╪═════════════════╪═════════════════╪═══════════════╪════════╡

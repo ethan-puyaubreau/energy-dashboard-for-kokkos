@@ -181,7 +181,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "energy-dashboard-for-kokkos"
+name = "energy-for-kokkos"
 version = "0.3.0"
 dependencies = [
  "anyhow",

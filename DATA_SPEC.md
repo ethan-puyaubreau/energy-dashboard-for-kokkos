@@ -1,6 +1,6 @@
-# Data Specification: energy-dashboard-for-kokkos Trace Format (v1)
+# Data Specification: energy-for-kokkos Trace Format (v1)
 
-This document formally specifies the input data format expected by `energy-dashboard-for-kokkos` (v0.1.0+).
+This document formally specifies the input data format expected by `energy-for-kokkos` (v0.1.0+).
 
 ## 1. Overview
 
@@ -12,7 +12,7 @@ An execution trace consists of a directory containing:
 All timestamps are expressed as **64-bit unsigned integers in nanoseconds** (`uint64_t`), referencing UNIX epoch.
 
 When the connector detects an MPI rank, the files are written to a `rank_<N>`
-subdirectory of the output path. `energy-dashboard-for-kokkos` analyzes every rank subdirectory
+subdirectory of the output path. `energy-for-kokkos` analyzes every rank subdirectory
 it finds, one report per rank.
 
 ---

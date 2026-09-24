@@ -23,7 +23,7 @@ pub fn run_instrumented_command(
 ) -> Result<i32> {
     if app_args.is_empty() {
         anyhow::bail!(
-            "No command specified to run. Usage: energy-dashboard-for-kokkos run --lib <LIB> -- <APP> [ARGS...]"
+            "No command specified to run. Usage: energy-for-kokkos run --lib <LIB> -- <APP> [ARGS...]"
         );
     }
 
@@ -44,16 +44,16 @@ pub fn run_instrumented_command(
     let args = &app_args[1..];
 
     println!(
-        "  [energy-dashboard-for-kokkos] Launching instrumented application: {}",
+        "  [energy-for-kokkos] Launching instrumented application: {}",
         exe
     );
     println!(
-        "  [energy-dashboard-for-kokkos] Using connector: {}",
+        "  [energy-for-kokkos] Using connector: {}",
         lib_path.display()
     );
     if let Some(dir) = keep_trace {
         println!(
-            "  [energy-dashboard-for-kokkos] Keeping raw trace in: {}",
+            "  [energy-for-kokkos] Keeping raw trace in: {}",
             dir.display()
         );
     }
@@ -69,7 +69,7 @@ pub fn run_instrumented_command(
 
     if !status.success() {
         eprintln!(
-            "  [energy-dashboard-for-kokkos] Warning: application exited with status: {}",
+            "  [energy-for-kokkos] Warning: application exited with status: {}",
             status
         );
     }
@@ -77,11 +77,11 @@ pub fn run_instrumented_command(
     // A process killed by a signal has no exit code
     let code = status.code().unwrap_or(1);
 
-    println!("\n  [energy-dashboard-for-kokkos] Application finished. Analyzing trace...");
+    println!("\n  [energy-for-kokkos] Application finished. Analyzing trace...");
     match analyze_and_report(trace_path, perfetto, report_html) {
         Ok(()) => Ok(code),
         Err(err) if code != 0 => {
-            eprintln!("  [energy-dashboard-for-kokkos] Could not analyze trace: {err:#}");
+            eprintln!("  [energy-for-kokkos] Could not analyze trace: {err:#}");
             Ok(code)
         }
         Err(err) => Err(err),
