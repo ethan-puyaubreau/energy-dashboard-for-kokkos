@@ -28,5 +28,10 @@ jobs:
       - name: Run tests
         run: cargo test --verbose
 
+      - name: Check documentation
+        run: cargo doc --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+
       - name: Build release binary
         run: cargo build --release
