@@ -42,6 +42,12 @@ pub struct TraceAnalysis {
     pub idle_energy_joules: f64,
     /// Breakdown of the total energy per power series.
     pub devices: Vec<DeviceMetrics>,
+    /// Median interval between two samples of a series, if at least two samples exist.
+    pub sampling_period_sec: Option<f64>,
+    /// Fraction of events shorter than the sampling period, in [0, 1].
+    ///
+    /// The power of such events is interpolated between samples, not measured.
+    pub short_event_fraction: f64,
     pub regions: Vec<RegionMetrics>,
 }
 
@@ -136,6 +142,22 @@ fn covered_ns(trace: &Trace) -> u64 {
     covered + current.map_or(0, |(start, end)| end - start)
 }
 
+/// Median interval in nanoseconds between consecutive samples of the same series.
+fn median_sampling_period_ns(trace: &Trace) -> Option<u64> {
+    let mut intervals: Vec<u64> = trace
+        .series
+        .iter()
+        .flat_map(|s| s.samples.windows(2))
+        .map(|w| w[1].timestamp_ns - w[0].timestamp_ns)
+        .collect();
+    if intervals.is_empty() {
+        return None;
+    }
+
+    let mid = intervals.len() / 2;
+    Some(*intervals.select_nth_unstable(mid).1)
+}
+
 /// Analyze a complete trace and compute energy attribution per region/kernel.
 pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
     // The window spans every event and every sample, so idle phases are measured too
@@ -183,6 +205,20 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
     let idle_energy_joules = (total_trace_energy_joules - exclusive_sum).max(0.0);
     let idle_duration_sec =
         (max_end - min_start).saturating_sub(covered_ns(trace)) as f64 / 1_000_000_000.0;
+
+    let sampling_period_ns = median_sampling_period_ns(trace);
+    let short_events = sampling_period_ns.map_or(0, |period| {
+        trace
+            .events
+            .iter()
+            .filter(|e| e.duration_ns() < period)
+            .count()
+    });
+    let short_event_fraction = if trace.events.is_empty() {
+        0.0
+    } else {
+        short_events as f64 / trace.events.len() as f64
+    };
 
     // Aggregate by (name, category)
     struct Agg {
@@ -249,6 +285,8 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
         idle_duration_sec,
         idle_energy_joules,
         devices,
+        sampling_period_sec: sampling_period_ns.map(|ns| ns as f64 / 1_000_000_000.0),
+        short_event_fraction,
         regions,
     }
 }
@@ -305,6 +343,19 @@ mod tests {
         assert!((analysis.total_trace_energy_joules - 400.0).abs() < 1e-6);
         assert!((analysis.idle_energy_joules - 300.0).abs() < 1e-6);
         assert!((analysis.idle_duration_sec - 3.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_events_shorter_than_sampling_period_are_counted() {
+        let short = Event {
+            end_ns: 500_000_000,
+            ..event(2, 0, "Short", 0, 0)
+        };
+        let events = vec![event(1, 0, "Long", 0, 2), short];
+        let analysis = analyze_trace(&Trace::new(None, events, constant_power(2)));
+
+        assert_eq!(analysis.sampling_period_sec, Some(1.0));
+        assert!((analysis.short_event_fraction - 0.5).abs() < 1e-9);
     }
 
     #[test]

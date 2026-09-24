@@ -4,6 +4,23 @@ use comfy_table::{Cell, Color, Row, Table};
 use crate::engine::TraceAnalysis;
 use crate::model::Trace;
 
+/// Describe how many events are too short to be measured by the power sampler.
+///
+/// Returns `None` when every event spans at least one sampling period.
+pub fn sampling_note(analysis: &TraceAnalysis) -> Option<String> {
+    let period = analysis.sampling_period_sec?;
+    if analysis.short_event_fraction <= 0.0 {
+        return None;
+    }
+
+    Some(format!(
+        "{:.1}% of events are shorter than the {:.1} ms sampling period, \
+         their power is interpolated between samples rather than measured.",
+        analysis.short_event_fraction * 100.0,
+        period * 1_000.0
+    ))
+}
+
 /// Print summary table and metadata to standard output.
 pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
     println!();
@@ -86,6 +103,10 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
             "  {} {}: {:.2} J, {:.1} W avg",
             d.domain, d.device_id, d.energy_joules, d.avg_power_watts
         );
+    }
+
+    if let Some(note) = sampling_note(analysis) {
+        println!("\n  Note: {note}");
     }
     println!();
 }
