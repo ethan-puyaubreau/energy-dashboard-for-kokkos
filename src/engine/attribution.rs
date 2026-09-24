@@ -1,5 +1,5 @@
 use super::integrate::integrate_energy_joules;
-use crate::model::{RegionCategory, Trace};
+use crate::model::{DeviceDomain, RegionCategory, Trace};
 use std::cmp::Reverse;
 use std::collections::HashMap;
 
@@ -20,6 +20,15 @@ pub struct RegionMetrics {
     pub energy_percentage: f64,
 }
 
+/// Energy of a single power series over the whole trace window.
+#[derive(Debug, Clone)]
+pub struct DeviceMetrics {
+    pub domain: DeviceDomain,
+    pub device_id: u32,
+    pub energy_joules: f64,
+    pub avg_power_watts: f64,
+}
+
 /// Global trace analysis result.
 #[derive(Debug, Clone)]
 pub struct TraceAnalysis {
@@ -31,6 +40,8 @@ pub struct TraceAnalysis {
     pub idle_duration_sec: f64,
     /// Energy of the window not attributed to any event.
     pub idle_energy_joules: f64,
+    /// Breakdown of the total energy per power series.
+    pub devices: Vec<DeviceMetrics>,
     pub regions: Vec<RegionMetrics>,
 }
 
@@ -137,6 +148,24 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
         0.0
     };
 
+    let devices = trace
+        .series
+        .iter()
+        .map(|s| {
+            let energy = integrate_energy_joules(&s.samples, min_start, max_end);
+            DeviceMetrics {
+                domain: s.domain,
+                device_id: s.device_id,
+                energy_joules: energy,
+                avg_power_watts: if total_trace_duration_sec > 0.0 {
+                    energy / total_trace_duration_sec
+                } else {
+                    0.0
+                },
+            }
+        })
+        .collect();
+
     // Inclusive energy is the exclusive energy summed over each subtree
     let parents = trace.event_parents();
     let exclusive = exclusive_energies(trace, &parents);
@@ -219,6 +248,7 @@ pub fn analyze_trace(trace: &Trace) -> TraceAnalysis {
         avg_trace_power_watts,
         idle_duration_sec,
         idle_energy_joules,
+        devices,
         regions,
     }
 }

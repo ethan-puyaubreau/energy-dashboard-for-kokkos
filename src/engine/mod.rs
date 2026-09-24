@@ -2,6 +2,6 @@ pub mod attribution;
 pub mod integrate;
 pub mod runner;
 
-pub use attribution::{analyze_trace, RegionMetrics, TraceAnalysis};
+pub use attribution::{analyze_trace, DeviceMetrics, RegionMetrics, TraceAnalysis};
 pub use integrate::integrate_energy_joules;
 pub use runner::run_instrumented_command;

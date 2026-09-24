@@ -79,5 +79,13 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
     ]));
 
     println!("{table}");
+
+    // Energy per measured device, the table above sums all of them
+    for d in &analysis.devices {
+        println!(
+            "  {} {}: {:.2} J, {:.1} W avg",
+            d.domain, d.device_id, d.energy_joules, d.avg_power_watts
+        );
+    }
     println!();
 }
