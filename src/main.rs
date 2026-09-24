@@ -31,7 +31,7 @@ enum Commands {
 
     /// Run an application with Kokkos energy profiling and analyze output immediately
     Run {
-        /// Path to the energy profiler library (e.g. libkokkos_energy.so)
+        /// Path to the energy profiler library (e.g. libenergy_dashboard_connector.so)
         #[arg(short, long, value_name = "LIB_PATH", env = "KOKKOS_TOOLS_LIBS")]
         lib: PathBuf,
 

@@ -52,7 +52,7 @@ jobs:
           cmake --build build-connector
 
       - name: Trace a simulated Kokkos run
-        run: KOKKOS_TOOLS_OUTPUT_PATH=trace build-connector/connector_smoke build-connector/libkokkos_energy.so
+        run: KOKKOS_TOOLS_OUTPUT_PATH=trace build-connector/connector_smoke build-connector/libenergy_dashboard_connector.so
 
       - name: Analyze the trace
         run: |

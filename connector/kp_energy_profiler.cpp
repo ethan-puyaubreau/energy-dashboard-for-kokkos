@@ -380,7 +380,7 @@ void init() {
   std::error_code ec;
   std::filesystem::create_directories(g_out_dir, ec);
   if (ec) {
-    std::cerr << "[kokkos-energy-profiler] Error creating output directory "
+    std::cerr << "[energy-dashboard-connector] Error creating output directory "
               << g_out_dir << ": " << ec.message() << "\n";
   }
 
@@ -406,12 +406,12 @@ void init() {
       }
       if (!g_nvml_devices.empty()) {
         g_nvml_ok = true;
-        std::cout << "[kokkos-energy-profiler] NVML initialized with "
+        std::cout << "[energy-dashboard-connector] NVML initialized with "
                   << g_nvml_devices.size() << " GPU device(s)\n";
       }
     }
   } else {
-    std::cerr << "[kokkos-energy-profiler] Warning: NVML init failed, running without GPU telemetry\n";
+    std::cerr << "[energy-dashboard-connector] Warning: NVML init failed, running without GPU telemetry\n";
   }
 
   write_metadata();
@@ -491,7 +491,7 @@ void finalize() {
     g_power_file.close();
   }
 
-  std::cout << "[kokkos-energy-profiler] Profiling complete. Traces written to: " << g_out_dir << "\n";
+  std::cout << "[energy-dashboard-connector] Profiling complete. Traces written to: " << g_out_dir << "\n";
 }
 
 } // namespace KokkosTools::EnergyProfiler

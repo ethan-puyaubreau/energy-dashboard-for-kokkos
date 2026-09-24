@@ -1,5 +1,5 @@
 // Loads the connector the way Kokkos Tools does and fires one region around one
-// kernel, so CI can analyze the trace it writes. Usage: connector_smoke <libkokkos_energy.so>
+// kernel, so CI can analyze the trace it writes. Usage: connector_smoke <libenergy_dashboard_connector.so>
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
@@ -19,7 +19,7 @@ F symbol(void *lib, const char *name) {
 
 int main(int argc, char **argv) {
   if (argc != 2) {
-    std::fprintf(stderr, "usage: %s <libkokkos_energy.so>\n", argv[0]);
+    std::fprintf(stderr, "usage: %s <libenergy_dashboard_connector.so>\n", argv[0]);
     return 2;
   }
   void *lib = dlopen(argv[1], RTLD_NOW);

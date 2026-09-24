@@ -31,7 +31,7 @@ accelerators are not sampled by the connector.
 - Build from source: Rust 1.88 or newer. The `analyze` command runs on any platform
   supported by Rust, the `run` command needs a platform where the connector runs.
 
-### Profiling connector (`libkokkos_energy.so`)
+### Profiling connector (`libenergy_dashboard_connector.so`)
 
 - Linux x86_64, native or WSL2.
 - NVIDIA driver providing NVML (`libnvidia-ml.so`, installed with the driver). Power
@@ -91,7 +91,7 @@ Build it with CMake (needs the CUDA toolkit for NVML):
 ```bash
 cmake -S connector -B build-connector -DCMAKE_BUILD_TYPE=Release
 cmake --build build-connector
-# -> build-connector/libkokkos_energy.so
+# -> build-connector/libenergy_dashboard_connector.so
 ```
 
 Traces written by the 2025 version of the connector, such as the ones published with the
@@ -106,7 +106,7 @@ analyze the output directory as below.
 Run and analyze your Kokkos application in a single step:
 
 ```bash
-energy-dashboard-for-kokkos run --lib /path/to/libkokkos_energy.so --report report.html --perfetto trace.json -- ./my_app [args...]
+energy-dashboard-for-kokkos run --lib /path/to/libenergy_dashboard_connector.so --report report.html --perfetto trace.json -- ./my_app [args...]
 ```
 
 The raw trace is written to a temporary directory and removed on exit. Pass
@@ -119,7 +119,7 @@ If the application was run independently:
 
 ```bash
 # 1. Run with standard KokkosP environment variables
-export KOKKOS_TOOLS_LIBS=/path/to/libkokkos_energy.so
+export KOKKOS_TOOLS_LIBS=/path/to/libenergy_dashboard_connector.so
 export KOKKOS_TOOLS_OUTPUT_PATH=./my_trace
 ./my_app
 
@@ -192,7 +192,9 @@ report the same device energy: do not sum device or total energies across ranks.
 ### Limits
 
 - The connector samples power every 20 ms, but NVML itself refreshes the power
-  reading only about every 100 ms, from the last 25 ms of each interval. Kernels
+  reading only about every 100 ms, from the last 25 ms of each interval. Those figures
+  were measured on A100 and H100 GPUs (Yang, Adamek and Armour, SC24); other GPUs may
+  refresh differently, and the 100 ms floor is applied to every GPU trace. Kernels
   shorter than that are not measured individually: their power is interpolated
   between samples, and summing many launches only helps when they do not recur at
   the same phase as the sensor window. Regions much longer than the refresh interval,
