@@ -61,6 +61,7 @@ fn real_rtx3080ti_trace_is_consistent() {
         exclusive_sum += r.exclusive_energy_joules;
     }
 
-    // Exclusive energy never counts a Joule twice
-    assert!(exclusive_sum <= analysis.total_trace_energy_joules + 1e-6);
+    // Every Joule is attributed exactly once, to an event or to idle
+    let attributed = exclusive_sum + analysis.idle_energy_joules;
+    assert!((attributed - analysis.total_trace_energy_joules).abs() < 1e-6);
 }

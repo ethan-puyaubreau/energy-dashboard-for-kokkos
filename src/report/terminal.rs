@@ -42,9 +42,30 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
         ]));
     }
 
+    // Energy measured while no event was running
+    let idle_pct = if analysis.total_trace_energy_joules > 0.0 {
+        analysis.idle_energy_joules / analysis.total_trace_energy_joules * 100.0
+    } else {
+        0.0
+    };
+    let idle_power = if analysis.idle_duration_sec > 0.0 {
+        analysis.idle_energy_joules / analysis.idle_duration_sec
+    } else {
+        0.0
+    };
+    table.add_row(Row::from(vec![
+        Cell::new("Idle (outside events)").fg(Color::DarkGrey),
+        Cell::new("-"),
+        Cell::new("-"),
+        Cell::new(format!("{:.3}", analysis.idle_duration_sec)),
+        Cell::new(format!("{:.2}", analysis.idle_energy_joules)),
+        Cell::new(format!("{:.1}", idle_power)),
+        Cell::new(format!("{:.1}%", idle_pct)),
+    ]));
+
     // Total trace summary row
     table.add_row(Row::from(vec![
-        Cell::new("Total Trace (Active)").fg(Color::Yellow),
+        Cell::new("Total Trace").fg(Color::Yellow),
         Cell::new("-"),
         Cell::new("-"),
         Cell::new(format!("{:.3}", analysis.total_trace_duration_sec)).fg(Color::Yellow),
