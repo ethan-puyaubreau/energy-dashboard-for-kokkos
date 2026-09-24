@@ -54,7 +54,7 @@ Defines the continuous physical telemetry collected by the asynchronous sampling
 | `domain` | `string` | Subsystem domain: `GPU`, `CPU_PKG`, `CPU_DRAM`, `NODE` |
 | `device_id` | `uint32` | Device index (GPU id or CPU socket id) |
 | `power_watts` | `float64` | Instantaneous power in Watts |
-| `energy_joules`| `float64` | (Optional) Hardware cumulative energy counter in Joules (empty if unavailable) |
+| `energy_joules`| `float64` | (Optional) Hardware cumulative energy counter in Joules. Accepted but ignored by the analysis, the reference connector leaves it empty |
 
 Example:
 ```csv

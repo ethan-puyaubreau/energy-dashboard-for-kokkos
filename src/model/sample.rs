@@ -45,7 +45,9 @@ pub struct PowerSample {
     pub device_id: u32,
     /// Instantaneous power in Watts.
     pub power_watts: f64,
-    /// Hardware cumulative energy counter in Joules, if the device exposes one.
+    /// Hardware cumulative energy counter in Joules.
+    ///
+    /// Parsed for format compatibility but ignored by the analysis.
     #[serde(default)]
     pub energy_joules: Option<f64>,
 }

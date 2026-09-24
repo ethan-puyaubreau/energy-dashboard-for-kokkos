@@ -112,9 +112,9 @@ Output example (rows below 0.1% trimmed):
 
 - Each power series (one per domain and device) is integrated on its own with the
   trapezoidal rule, then the series are summed.
-- Power is linearly interpolated at block boundaries. When a hardware cumulative
-  energy counter brackets both boundaries, its interpolated difference is used
-  instead.
+- Power is linearly interpolated at block boundaries.
+- Sampled power is the only reference. Hardware cumulative energy counters are
+  ignored because they proved unreliable on NVIDIA GPUs.
 - Blocks that overlap without being nested, such as concurrent kernels, share the
   energy of the overlapping interval equally.
 
