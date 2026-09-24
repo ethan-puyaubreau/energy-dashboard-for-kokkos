@@ -1,6 +1,7 @@
 # energy-dashboard-for-kokkos
 
 [![CI](https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos/actions/workflows/ci.yml/badge.svg)](https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos/actions/workflows/ci.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22943410.svg)](https://doi.org/10.5281/zenodo.22943410)
 
 Attributes measured GPU energy to the regions and kernels of a Kokkos application.
 
@@ -229,7 +230,8 @@ release process.
 
 ## Citing
 
-If this tool supports published work, please cite it with the metadata in
-[CITATION.cff](CITATION.cff) (GitHub shows it under "Cite this repository"). The
+If this tool supports published work, please cite it with its DOI,
+[10.5281/zenodo.22943410](https://doi.org/10.5281/zenodo.22943410) (all versions, archived on Zenodo), or with
+the metadata in [CITATION.cff](CITATION.cff) (GitHub shows it under "Cite this repository"). The
 measurement limits and the DBSCAN case study are described in the
 [SMC 2025 poster](https://ethan-puyaubreau.github.io/smc2025-gpu-energy-poster/).

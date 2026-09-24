@@ -11,6 +11,7 @@ authors:
     given-names: Ethan
     orcid: "https://orcid.org/0009-0003-1770-8830"
 version: 0.3.0
+doi: 10.5281/zenodo.22943410
 date-released: 2026-09-24
 license: Apache-2.0
 repository-code: "https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos"
