@@ -1,5 +1,7 @@
 //! Summary table printed to standard output.
 
+use std::fmt::Write;
+
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{Cell, Color, Row, Table};
 
@@ -35,17 +37,24 @@ pub fn sampling_note(analysis: &TraceAnalysis) -> Option<String> {
 
 /// Print summary table and metadata to standard output.
 pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
-    println!();
+    print!("{}", render_terminal_report(trace, analysis));
+}
+
+/// Build the text printed by [`print_terminal_report`].
+pub fn render_terminal_report(trace: &Trace, analysis: &TraceAnalysis) -> String {
+    // Writing to a String cannot fail, so the results of writeln! are ignored.
+    let mut out = String::from("\n");
     if let Some(ref meta) = trace.metadata {
         let app = meta.app_name.as_deref().unwrap_or("Unknown");
         let host = meta.hostname.as_deref().unwrap_or("Unknown");
         let backend = meta.kokkos_backend.as_deref().unwrap_or("Unknown");
-        println!(
+        let _ = writeln!(
+            out,
             "  energy-dashboard-for-kokkos - App: {} (Host: {}, Backend: {})",
             app, host, backend
         );
     } else {
-        println!("  energy-dashboard-for-kokkos report");
+        out.push_str("  energy-dashboard-for-kokkos report\n");
     }
 
     let mut table = Table::new();
@@ -107,20 +116,22 @@ pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
         Cell::new("100.0%").fg(Color::Yellow),
     ]));
 
-    println!("{table}");
+    let _ = writeln!(out, "{table}");
 
     // Energy per measured device, the table above sums all of them
     for d in &analysis.devices {
-        println!(
+        let _ = writeln!(
+            out,
             "  {} {}: {:.2} J, {:.1} W avg",
             d.domain, d.device_id, d.energy_joules, d.avg_power_watts
         );
     }
 
     if let Some(note) = sampling_note(analysis) {
-        println!("\n  Note: {note}");
+        let _ = writeln!(out, "\n  Note: {note}");
     }
-    println!();
+    out.push('\n');
+    out
 }
 
 #[cfg(test)]
