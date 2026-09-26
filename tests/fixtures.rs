@@ -1,11 +1,24 @@
 use energy_dashboard_for_kokkos::engine::{analyze_trace, RegionMetrics, TraceAnalysis};
+use energy_dashboard_for_kokkos::model::Trace;
 use energy_dashboard_for_kokkos::parser::load_trace_dir;
+use energy_dashboard_for_kokkos::report::render_terminal_report;
 
 /// Analyze a trace directory located under tests/fixtures.
 fn analyze_fixture(name: &str) -> TraceAnalysis {
+    analyze_trace(&load_fixture(name))
+}
+
+fn load_fixture(name: &str) -> Trace {
     let dir = format!("{}/tests/fixtures/{}", env!("CARGO_MANIFEST_DIR"), name);
-    let trace = load_trace_dir(&dir).expect("fixture should load");
-    analyze_trace(&trace)
+    load_trace_dir(&dir).expect("fixture should load")
+}
+
+/// Find the table row of a block in a rendered terminal report.
+fn report_row<'a>(report: &'a str, name: &str) -> &'a str {
+    report
+        .lines()
+        .find(|line| line.starts_with(&format!("\u{2502} {name} ")))
+        .unwrap_or_else(|| panic!("row {name} not found in:\n{report}"))
 }
 
 /// Find the aggregated metrics of a region by name.
@@ -79,4 +92,39 @@ fn h100_dbscan_run_matches_the_published_figure() {
 
     assert!((dbscan.total_duration_sec - 2.681).abs() < 1e-3);
     assert!((dbscan.inclusive_energy_joules - 771.83).abs() < 0.01);
+}
+
+#[test]
+fn terminal_report_lists_regions_idle_and_total() {
+    let trace = load_fixture("synthetic_run");
+    let report = render_terminal_report(&trace, &analyze_trace(&trace));
+
+    assert!(report.contains("App: synthetic_bench (Host: test-node, Backend: CUDA)"));
+    for (name, cells) in [
+        ("MainLoop", ["1875.00", "375.00", "20.0%"]),
+        ("Reduction", ["900.00", "900.00", "48.0%"]),
+        ("MatVec", ["600.00", "600.00", "32.0%"]),
+        ("Idle (outside events)", ["0.000", "0.00", "0.0%"]),
+        ("Total Trace", ["1875.00", "234.4", "100.0%"]),
+    ] {
+        let row = report_row(&report, name);
+        for cell in cells {
+            assert!(row.contains(cell), "{name} row lacks {cell}: {row}");
+        }
+    }
+    assert!(report.contains("GPU 0: 1875.00 J, 234.4 W avg"));
+    assert!(!report.contains("Note:"));
+}
+
+#[test]
+fn terminal_report_without_metadata_or_with_short_events() {
+    let mut trace = load_fixture("real_rtx3080ti_trace");
+    let analysis = analyze_trace(&trace);
+    trace.metadata = None;
+    let report = render_terminal_report(&trace, &analysis);
+
+    assert!(report.contains("energy-dashboard-for-kokkos report"));
+    // Most kernels of the real run are shorter than the NVML refresh period.
+    assert!(report.contains("Note: "));
+    assert!(report.contains("their power is interpolated"));
 }
