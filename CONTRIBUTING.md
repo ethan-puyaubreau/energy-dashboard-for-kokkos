@@ -26,8 +26,8 @@ code and the document.
 
 ## Development Setup
 
-Requirements: Rust 1.88 or newer. No GPU is needed to work on the analysis tool, the
-test fixtures contain recorded traces.
+Requirements: Rust 1.88 or newer. No GPU is needed to work on the analysis tool: the
+traces in `examples/` were recorded on real GPUs.
 
 ```bash
 git clone https://github.com/ethan-puyaubreau/energy-dashboard-for-kokkos.git
@@ -47,7 +47,7 @@ RUSTDOCFLAGS="-D warnings" cargo doc --no-deps
 Try the tool on a recorded trace:
 
 ```bash
-cargo run -- analyze tests/fixtures/real_rtx3080ti_trace --report report.html
+cargo run -- analyze examples/rtx3080ti_energy_bench --report report.html
 ```
 
 ## Code Map
@@ -60,6 +60,7 @@ cargo run -- analyze tests/fixtures/real_rtx3080ti_trace --report report.html
 | `src/report` | Terminal table, Perfetto export and HTML report |
 | `src/lib.rs` | Analysis and export pipeline shared by both commands |
 | `tests/` | Integration tests on the fixtures in `tests/fixtures` |
+| `examples/` | Traces recorded on real GPUs, used by the tutorial and the regression tests |
 
 ## Conventions
 
@@ -73,6 +74,7 @@ cargo run -- analyze tests/fixtures/real_rtx3080ti_trace --report report.html
 - A new fixture is a directory under `tests/fixtures` following
   [DATA_SPEC.md](DATA_SPEC.md). Keep synthetic fixtures small enough that expected
   values can be computed by hand.
+- Traces recorded on real hardware go in `examples/` instead.
 
 ### Commits
 

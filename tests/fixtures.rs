@@ -13,6 +13,16 @@ fn load_fixture(name: &str) -> Trace {
     load_trace_dir(&dir).expect("fixture should load")
 }
 
+/// Analyze a trace recorded on real hardware, located under examples.
+fn analyze_example(name: &str) -> TraceAnalysis {
+    analyze_trace(&load_example(name))
+}
+
+fn load_example(name: &str) -> Trace {
+    let dir = format!("{}/examples/{}", env!("CARGO_MANIFEST_DIR"), name);
+    load_trace_dir(&dir).expect("example should load")
+}
+
 /// Find the table row of a block in a rendered terminal report.
 fn report_row<'a>(report: &'a str, name: &str) -> &'a str {
     report
@@ -66,7 +76,7 @@ fn multi_domain_series_are_integrated_separately() {
 
 #[test]
 fn real_rtx3080ti_trace_is_consistent() {
-    let analysis = analyze_fixture("real_rtx3080ti_trace");
+    let analysis = analyze_example("rtx3080ti_energy_bench");
 
     assert!(analysis.total_trace_energy_joules > 0.0);
     assert!(!analysis.regions.is_empty());
@@ -87,7 +97,7 @@ fn h100_dbscan_run_matches_the_published_figure() {
     // One ArborX DBSCAN run from the SMC 2025 poster data, converted with
     // analysis/to_trace_v1.py from the poster repository. Power is interpolated at the
     // region boundaries, hence 771.8 J where the poster script reads 769.3 J.
-    let analysis = analyze_fixture("h100_arborx_fdbscan");
+    let analysis = analyze_example("h100_arborx_fdbscan");
     let dbscan = region(&analysis, "DBSCANCalculation");
 
     assert!((dbscan.total_duration_sec - 2.681).abs() < 1e-3);
@@ -118,7 +128,7 @@ fn terminal_report_lists_regions_idle_and_total() {
 
 #[test]
 fn terminal_report_without_metadata_or_with_short_events() {
-    let mut trace = load_fixture("real_rtx3080ti_trace");
+    let mut trace = load_example("rtx3080ti_energy_bench");
     let analysis = analyze_trace(&trace);
     trace.metadata = None;
     let report = render_terminal_report(&trace, &analysis);
