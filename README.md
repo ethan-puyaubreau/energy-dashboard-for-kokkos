@@ -60,6 +60,9 @@ accelerators are not sampled by the connector.
 
 ## Quick start
 
+No GPU at hand? The [tutorial](docs/tutorial.md) analyzes a real H100 trace shipped in
+[`examples/`](examples), from the terminal table to the Perfetto timeline.
+
 ### 1. Install
 
 Download the static Linux x86_64 binary from the
@@ -214,6 +217,8 @@ Pass `--perfetto trace.json` and open [ui.perfetto.dev](https://ui.perfetto.dev)
 
 ### 2. Standalone HTML report
 Pass `--report report.html` and open the generated file directly in any web browser.
+
+The [tutorial](docs/tutorial.md#8-see-the-run-on-a-timeline) shows both on a real run.
 
 ---
 
