@@ -107,6 +107,15 @@ trace, so attach the trace directory (`events.csv`, `power_samples.csv`,
 `metadata.json`) as a zip archive when you can. `energy-dashboard-for-kokkos run --keep-trace <DIR>`
 keeps it for you.
 
+## Governance
+
+The project has a single maintainer, Ethan Puyaubreau, who reviews and merges pull
+requests and publishes releases. Decisions on scope and measurement are discussed in
+issues and recorded in "Scope and Settled Decisions" above, so that a settled point
+is not argued again in every pull request. The maintainer aims to give a first answer
+to issues and pull requests within a week. A contributor with several merged pull
+requests can ask to become a co-maintainer.
+
 ## Releasing
 
 For maintainers only.
