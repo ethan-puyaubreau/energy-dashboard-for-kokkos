@@ -24,9 +24,11 @@ fn escape_html(text: &str) -> String {
 
 /// Serialize a value to JSON that is safe to embed inside a script element.
 ///
-/// A kernel name containing `</script>` would otherwise close the element early.
+/// A kernel name containing `</script>` would close the element early, and one containing
+/// `<!--<script>` would hide the rest of the page in it. Every `<` is written as `\u003c`,
+/// which JSON reads back as `<`.
 fn script_json<T: serde::Serialize>(value: &T) -> Result<String> {
-    Ok(serde_json::to_string(value)?.replace("</", "<\\/"))
+    Ok(serde_json::to_string(value)?.replace('<', "\\u003c"))
 }
 
 /// Generate a standalone interactive HTML report using embedded Plotly.js.
@@ -270,7 +272,7 @@ mod tests {
         let event = Event {
             id: 1,
             parent_id: 0,
-            name: "</script><b>kernel".to_string(),
+            name: "<!--<script></script><b>kernel".to_string(),
             category: RegionCategory::ParallelFor,
             start_ns: 0,
             end_ns: 10,
@@ -291,6 +293,8 @@ mod tests {
         assert!(!html.contains("<b>app"));
         // Only the Plotly bundle and the chart script close a script element
         assert_eq!(html.matches("</script>").count(), 2);
+        assert!(!html.contains("<!--<script>"));
+        assert!(html.contains(r"\u003c!--\u003cscript>"));
     }
 
     #[test]
