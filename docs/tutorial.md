@@ -23,7 +23,9 @@ cargo build --release
 ```
 
 The commands below call the binary `energy-dashboard-for-kokkos`. After a source build it is
-`target/release/energy-dashboard-for-kokkos`.
+`target/release/energy-dashboard-for-kokkos`. Release archives published after v0.3.0 also
+contain `examples/` and this tutorial: run the commands from the extracted directory, with
+`./energy-dashboard-for-kokkos`.
 
 ## 2. What is in the trace
 

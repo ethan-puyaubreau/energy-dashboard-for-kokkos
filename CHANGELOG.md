@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The HTML report has a plain, printable layout. The energy per block is drawn as horizontal
   bars, so that long block names stay readable, and rounded like the terminal table.
+- Release archives also contain the example traces and the tutorial.
 
 ### Fixed
 

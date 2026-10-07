@@ -60,6 +60,7 @@ jobs:
           mkdir "$name"
           cp "target/$TARGET/release/energy-dashboard-for-kokkos" "$name/"
           cp README.md DATA_SPEC.md CHANGELOG.md LICENSE THIRD_PARTY_NOTICES.md "$name/"
+          cp -r docs examples "$name/"
           tar czf "$name.tar.gz" "$name"
           sha256sum "$name.tar.gz" > "$name.tar.gz.sha256"
 
