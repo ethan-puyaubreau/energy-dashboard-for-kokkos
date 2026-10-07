@@ -9,7 +9,8 @@ You will learn to:
 
 - read the terminal table and find the kernel that spends the energy;
 - tell inclusive from self energy, and see what the idle row counts;
-- know which figures to trust when kernels are short.
+- know which figures to trust when kernels are short;
+- see the run on a timeline, and share it as a single HTML file.
 
 ## 1. Get the tool
 
@@ -138,6 +139,63 @@ refreshes, and the regions are longer still. They are measured reliably. Treat t
 the short kernels as estimates, such as `TreeConstruction::generate_hierarchy` (82 ms)
 and its 331.5 W. The
 [Limits](../README.md#limits) section of the README explains where the 100 ms comes from.
+
+## 8. See the run on a timeline
+
+```bash
+energy-dashboard-for-kokkos analyze examples/h100_arborx_fdbscan --perfetto trace.json
+```
+
+Open [ui.perfetto.dev](https://ui.perfetto.dev), then **Open trace file** and pick
+`trace.json`. Perfetto reads the file in the browser, it does not upload it.
+
+![The DBSCAN run in Perfetto: nested regions on one track, GPU power below](images/tutorial-perfetto.webp)
+
+The nested regions stack on a single track, with the traversal kernel at the bottom, and
+the GPU power runs underneath as a counter. The picture explains the idle row: the power
+stays around 95 W for the first 7.2 s, then rises above 300 W once the clustering starts.
+Press `W` and `S` to zoom, `A` and `D` to pan, and click a slice to read its duration.
+
+## 9. Share an HTML report
+
+```bash
+energy-dashboard-for-kokkos analyze examples/h100_arborx_fdbscan --report report.html
+```
+
+The report is a single file of about 4.6 MB that opens offline in any browser, since the
+chart library is embedded. It shows the totals, the power over time and the self energy of
+each block.
+
+![The HTML report of the DBSCAN run](images/tutorial-html-report.webp)
+
+`--perfetto` and `--report` can be combined, and `run` accepts them too.
+
+## 10. When kernels are too short: the RTX trace
+
+The second example is a benchmark that launches 56,766 small kernels in 10 s on an
+RTX 3080 Ti:
+
+```bash
+energy-dashboard-for-kokkos analyze examples/rtx3080ti_energy_bench
+```
+
+Three rows of its table, and the note under it:
+
+| Block / Kernel | Category | Calls | Duration (s) | Energy Incl (J) | Energy Self (J) | Avg Power (W) | % Self |
+|----------------|----------|------:|-------------:|----------------:|----------------:|--------------:|-------:|
+| Reduction | USER_REGION | 1 | 4.000 | 1082.61 | 18.99 | 270.6 | 0.9% |
+| MatVec | USER_REGION | 1 | 4.000 | 839.08 | 12.37 | 209.8 | 0.6% |
+| daxpy | PARALLEL_FOR | 39882 | 1.835 | 215.53 | 215.53 | 117.5 | 10.0% |
+
+```text
+  Note: 99.9% of events are shorter than 100 ms (sampling every 20.4 ms, NVML refresh about 100 ms), their power is interpolated between readings rather than measured.
+```
+
+Almost no kernel lasts one NVML refresh. The `daxpy` row still reports 215.53 J over 39882
+calls, but it adds up interpolated values, so it remains an estimate. The `MatVec` and
+`Reduction` regions last 4 s each, about 40 refreshes: their energy, 839.08 J and
+1082.61 J, is the figure to quote. The rule is the same as in step 7: quote blocks much
+longer than 100 ms, and treat short kernels as estimates.
 
 ## Next steps
 
