@@ -128,3 +128,33 @@ fn terminal_report_without_metadata_or_with_short_events() {
     assert!(report.contains("Note: "));
     assert!(report.contains("their power is interpolated"));
 }
+
+#[test]
+fn exports_are_written_when_stdout_is_closed() {
+    let out = tempfile::tempdir().unwrap();
+    let perfetto = out.path().join("trace.json");
+    let report = out.path().join("report.html");
+
+    // Close the reading end before the run starts, as `| head` does once it has
+    // read enough.
+    let (reader, writer) = std::io::pipe().unwrap();
+    drop(reader);
+
+    let status = std::process::Command::new(env!("CARGO_BIN_EXE_energy-dashboard-for-kokkos"))
+        .arg("analyze")
+        .arg(format!(
+            "{}/tests/fixtures/synthetic_run",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .arg("--perfetto")
+        .arg(&perfetto)
+        .arg("--report")
+        .arg(&report)
+        .stdout(writer)
+        .status()
+        .unwrap();
+
+    assert!(status.success(), "the run failed: {status}");
+    assert!(perfetto.exists(), "Perfetto trace not written");
+    assert!(report.exists(), "HTML report not written");
+}

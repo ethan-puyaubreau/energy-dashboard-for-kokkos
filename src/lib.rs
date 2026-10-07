@@ -12,6 +12,7 @@ pub mod parser;
 pub mod report;
 
 use anyhow::Result;
+use std::io::{ErrorKind, Write};
 use std::path::{Path, PathBuf};
 
 /// Insert `suffix` between the stem and the extension of `path`.
@@ -22,6 +23,17 @@ fn with_suffix(path: &Path, suffix: &str) -> PathBuf {
         None => format!("{stem}_{suffix}"),
     };
     path.with_file_name(name)
+}
+
+/// Print `text` to standard output.
+///
+/// A reader that goes away, for instance `| head`, ends the output instead of being an
+/// error, so that the exports are still written. `print!` would panic there.
+pub fn print_stdout(text: &str) -> std::io::Result<()> {
+    match std::io::stdout().lock().write_all(text.as_bytes()) {
+        Err(err) if err.kind() == ErrorKind::BrokenPipe => Ok(()),
+        result => result,
+    }
 }
 
 /// Analyze a trace directory, print the terminal report and write the requested exports.
@@ -41,7 +53,7 @@ pub fn analyze_and_report(
 
     for dir in &dirs {
         let rank = dir.file_name().unwrap_or_default().to_string_lossy();
-        println!("\n  ===== {rank} =====");
+        print_stdout(&format!("\n  ===== {rank} =====\n"))?;
         analyze_single(
             dir,
             perfetto.map(|p| with_suffix(p, &rank)).as_deref(),
@@ -60,20 +72,22 @@ fn analyze_single(
     let trace = parser::load_trace_dir(trace_dir)?;
     let analysis = engine::analyze_trace(&trace);
 
-    report::print_terminal_report(&trace, &analysis);
+    report::print_terminal_report(&trace, &analysis)?;
 
     if let Some(perfetto_path) = perfetto {
         report::export_perfetto_trace(&trace, perfetto_path)?;
-        println!("  Exported Perfetto trace to: {}", perfetto_path.display());
-        println!("  Open https://ui.perfetto.dev to visualize the timeline.\n");
+        print_stdout(&format!(
+            "  Exported Perfetto trace to: {}\n  Open https://ui.perfetto.dev to visualize the timeline.\n\n",
+            perfetto_path.display()
+        ))?;
     }
 
     if let Some(html_path) = report_html {
         report::export_html_report(&trace, &analysis, html_path)?;
-        println!(
-            "  Exported interactive HTML report to: {}\n",
+        print_stdout(&format!(
+            "  Exported interactive HTML report to: {}\n\n",
             html_path.display()
-        );
+        ))?;
     }
 
     Ok(())

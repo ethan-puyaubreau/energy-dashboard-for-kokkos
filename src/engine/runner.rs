@@ -6,7 +6,7 @@ use std::path::Path;
 use std::process::Command;
 use tempfile::tempdir;
 
-use crate::analyze_and_report;
+use crate::{analyze_and_report, print_stdout};
 
 /// Run a command instrumented with the Kokkos energy connector library.
 ///
@@ -43,19 +43,15 @@ pub fn run_instrumented_command(
     let exe = &app_args[0];
     let args = &app_args[1..];
 
-    println!(
-        "  [energy-dashboard-for-kokkos] Launching instrumented application: {}",
-        exe
-    );
-    println!(
-        "  [energy-dashboard-for-kokkos] Using connector: {}",
+    print_stdout(&format!(
+        "  [energy-dashboard-for-kokkos] Launching instrumented application: {exe}\n  [energy-dashboard-for-kokkos] Using connector: {}\n",
         lib_path.display()
-    );
+    ))?;
     if let Some(dir) = keep_trace {
-        println!(
-            "  [energy-dashboard-for-kokkos] Keeping raw trace in: {}",
+        print_stdout(&format!(
+            "  [energy-dashboard-for-kokkos] Keeping raw trace in: {}\n",
             dir.display()
-        );
+        ))?;
     }
 
     let mut cmd = Command::new(exe);
@@ -77,7 +73,7 @@ pub fn run_instrumented_command(
     // A process killed by a signal has no exit code
     let code = status.code().unwrap_or(1);
 
-    println!("\n  [energy-dashboard-for-kokkos] Application finished. Analyzing trace...");
+    print_stdout("\n  [energy-dashboard-for-kokkos] Application finished. Analyzing trace...\n")?;
     match analyze_and_report(trace_path, perfetto, report_html) {
         Ok(()) => Ok(code),
         Err(err) if code != 0 => {

@@ -36,8 +36,8 @@ pub fn sampling_note(analysis: &TraceAnalysis) -> Option<String> {
 }
 
 /// Print summary table and metadata to standard output.
-pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) {
-    print!("{}", render_terminal_report(trace, analysis));
+pub fn print_terminal_report(trace: &Trace, analysis: &TraceAnalysis) -> std::io::Result<()> {
+    crate::print_stdout(&render_terminal_report(trace, analysis))
 }
 
 /// Build the text printed by [`print_terminal_report`].

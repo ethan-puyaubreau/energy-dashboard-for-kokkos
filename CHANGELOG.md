@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Zenodo DOI (10.5281/zenodo.22943410, all versions) in the README and `CITATION.cff`.
 
+### Fixed
+
+- Piping the output to a reader that stops early, such as `| head`, no longer aborts the run
+  before the Perfetto trace and the HTML report are written.
+
 ## [0.3.0] - 2026-09-24
 
 ### Added
