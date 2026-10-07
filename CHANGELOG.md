@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Zenodo DOI (10.5281/zenodo.22943410, all versions) in the README and `CITATION.cff`.
+- A tutorial, `docs/tutorial.md`, that reads a real ArborX DBSCAN trace from `examples/`
+  step by step, with no GPU needed.
 
 ### Fixed
 
