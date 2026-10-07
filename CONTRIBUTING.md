@@ -75,6 +75,9 @@ cargo run -- analyze examples/rtx3080ti_energy_bench --report report.html
   [DATA_SPEC.md](DATA_SPEC.md). Keep synthetic fixtures small enough that expected
   values can be computed by hand.
 - Traces recorded on real hardware go in `examples/` instead.
+- CI runs the commands of `docs/tutorial.md` and checks the table rows and the `GPU` and
+  `Note` lines it quotes. A change to the output updates the tutorial in the same commit,
+  including the figures in its prose, which are checked by hand.
 
 ### Commits
 

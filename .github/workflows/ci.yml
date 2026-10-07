@@ -85,6 +85,38 @@ jobs:
           grep -E 'Solve +┆ USER_REGION +┆ 1 .*┆ 100\.0 ' report.txt
           grep -E 'Kernel +┆ PARALLEL_FOR +┆ 1 .*┆ 100\.0 ' report.txt
 
+  tutorial:
+    name: Tutorial
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run the tutorial commands
+        run: |
+          cargo build --release
+          export PATH="$PWD/target/release:$PATH"
+          while IFS= read -r cmd; do
+            echo "+ $cmd"
+            $cmd >> output.txt
+          done < <(grep '^energy-dashboard-for-kokkos ' docs/tutorial.md)
+          test -s trace.json
+          test -s report.html
+
+      - name: Check the figures quoted in the tutorial
+        run: |
+          # Turn the table rows of the output into Markdown rows: | a | b | ... |
+          sed -E 's/ *(│|┆) */ | /g; s/^ //; s/ $//' output.txt > rows.txt
+          missing=0
+          while IFS= read -r line; do
+            grep -qFx -- "$line" rows.txt output.txt || { echo "Not in the output: $line"; missing=1; }
+          done < <(awk -F'|' 'NF == 10 && $2 !~ /Block|^-+$/' docs/tutorial.md
+                   grep -E '^  (Note|GPU 0):' docs/tutorial.md)
+          exit $missing
+
   msrv:
     name: Minimum Rust Version
     runs-on: ubuntu-latest
