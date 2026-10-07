@@ -2,7 +2,8 @@
 
 Thanks for your interest in improving `energy-dashboard-for-kokkos`. This guide covers the scope of
 the project, how to set up a development environment and the conventions a pull
-request is expected to follow.
+request is expected to follow. Everyone taking part is expected to follow the
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Scope and Settled Decisions
 
