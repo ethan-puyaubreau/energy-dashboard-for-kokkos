@@ -63,8 +63,18 @@ pub fn export_html_report<P: AsRef<Path>>(
         })
         .collect();
 
-    // Prepare summary bar chart data
-    let region_names: Vec<String> = analysis.regions.iter().map(|r| r.name.clone()).collect();
+    // Blocks are grouped by name and category, so a region and a kernel can share a name
+    let region_names: Vec<String> = analysis
+        .regions
+        .iter()
+        .map(|r| {
+            if analysis.regions.iter().filter(|o| o.name == r.name).count() > 1 {
+                format!("{} [{}]", r.name, r.category)
+            } else {
+                r.name.clone()
+            }
+        })
+        .collect();
     let region_energies: Vec<f64> = analysis
         .regions
         .iter()
@@ -281,5 +291,35 @@ mod tests {
         assert!(!html.contains("<b>app"));
         // Only the Plotly bundle and the chart script close a script element
         assert_eq!(html.matches("</script>").count(), 2);
+    }
+
+    #[test]
+    fn test_blocks_sharing_a_name_get_their_category() {
+        let event = |id, parent_id, category| Event {
+            id,
+            parent_id,
+            name: "assemble".to_string(),
+            category,
+            start_ns: 0,
+            end_ns: 10,
+        };
+        let events = vec![
+            event(1, 0, RegionCategory::UserRegion),
+            event(2, 1, RegionCategory::ParallelFor),
+        ];
+        let sample = PowerSample {
+            timestamp_ns: 0,
+            domain: DeviceDomain::Gpu,
+            device_id: 0,
+            power_watts: 100.0,
+            energy_joules: None,
+        };
+        let trace = Trace::new(None, events, vec![sample]);
+        let file = tempfile::NamedTempFile::new().unwrap();
+        export_html_report(&trace, &analyze_trace(&trace), file.path()).unwrap();
+
+        let html = std::fs::read_to_string(file.path()).unwrap();
+        assert!(html.contains("\"assemble [USER_REGION]\""));
+        assert!(html.contains("\"assemble [PARALLEL_FOR]\""));
     }
 }

@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- In the HTML report, a region and a kernel that share a name get separate bars, labelled
+  with their category.
 - Piping the output to a reader that stops early, such as `| head`, no longer aborts the run
   before the Perfetto trace and the HTML report are written.
 
