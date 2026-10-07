@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A tutorial, `docs/tutorial.md`, that reads a real ArborX DBSCAN trace from `examples/`
   step by step, with no GPU needed.
 
+### Changed
+
+- The HTML report has a plain, printable layout. The energy per block is drawn as horizontal
+  bars, so that long block names stay readable, and rounded like the terminal table.
+
 ### Fixed
 
 - Piping the output to a reader that stops early, such as `| head`, no longer aborts the run
